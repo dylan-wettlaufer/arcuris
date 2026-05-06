@@ -1,0 +1,218 @@
+# Arcuris — Cursor Rules
+
+## Project Overview
+Arcuris is a Next.js web app that helps new grad job seekers generate tailored resumes and track job applications. It archives the user's full experience inventory, then curates it to match each job description using AI.
+
+---
+
+## Tech Stack
+- **Framework:** Next.js (App Router)
+- **Language:** TypeScript
+- **Styling:** Tailwind CSS + shadcn/ui
+- **Auth + Database:** Supabase
+- **AI:** Google Gemini API
+- **Hosting:** Vercel
+
+---
+
+## UI Components — shadcn/ui First
+
+Always use shadcn/ui components before writing any custom UI. Never write raw HTML inputs, buttons, cards, dialogs, or form elements when a shadcn equivalent exists.
+
+**Installed components:**
+- `button`
+- `input`
+- `textarea`
+- `card`
+- `badge`
+- `dialog`
+- `form`
+- `label`
+- `select`
+- `separator`
+- `skeleton`
+- `table`
+- `tabs`
+- `toast`
+- `tooltip`
+
+**Import pattern:**
+```tsx
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+```
+
+If a needed component is not in the installed list above, suggest running `npx shadcn@latest add <component>` rather than building a custom version.
+
+---
+
+## File Structure
+
+```
+/app
+  /api              ← All API routes live here (server-side only)
+    /parse          ← Resume parsing endpoint
+    /generate       ← Resume generation endpoint
+    /interview      ← AI interview question generation
+  /dashboard        ← Application tracker
+  /generate         ← Resume generation flow
+  /onboarding
+    /upload         ← Resume upload step
+    /interview      ← AI interview step
+  /applications
+    /[id]           ← Application detail view
+  /settings         ← Edit inventory
+  /login
+  /signup
+/components
+  /ui               ← shadcn components (do not edit these)
+  /shared           ← Reusable app components
+/lib
+  /supabase         ← Supabase client setup
+  /gemini           ← Gemini API helper functions
+  /prompts          ← All AI prompt strings versioned here
+  /types            ← Shared TypeScript types
+```
+
+---
+
+## Next.js App Router Rules
+
+- Default to **Server Components**. Only add `"use client"` when the component needs interactivity, browser APIs, or React hooks.
+- Data fetching happens in Server Components or API routes — never fetch Gemini or Supabase directly inside a Client Component.
+- Use `loading.tsx` and `error.tsx` in each route folder.
+- Use Next.js `redirect()` from `next/navigation` for server-side redirects.
+- Use `useRouter()` from `next/navigation` for client-side navigation — never `next/router`.
+
+---
+
+## Supabase Rules
+
+**Two clients — use the right one:**
+
+Server-side (API routes, Server Components):
+```ts
+import { createServerClient } from "@/lib/supabase/server"
+```
+
+Client-side (Client Components):
+```ts
+import { createBrowserClient } from "@/lib/supabase/client"
+```
+
+- Never use the service role key in client components
+- Always scope queries with `eq("user_id", user.id)` — RLS is enabled but defense in depth matters
+- Use typed Supabase queries with the generated Database types from `/lib/types/supabase.ts`
+
+---
+
+## Gemini API Rules
+
+- **Never call the Gemini API from a client component.** All Gemini calls go through Next.js API routes in `/app/api/`.
+- The Gemini API key is `GEMINI_API_KEY` — only accessible server-side via `process.env.GEMINI_API_KEY`.
+- All prompts are defined in `/lib/prompts` — never hardcode prompt strings inline in API routes.
+- Always handle Gemini errors gracefully and return a meaningful error message to the client.
+
+**Standard API route pattern:**
+```ts
+import { GoogleGenerativeAI } from "@google/generative-ai"
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" })
+```
+
+---
+
+## Environment Variables
+
+```
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=        ← server-side only, never expose to client
+GEMINI_API_KEY=                   ← server-side only, never expose to client
+```
+
+Never reference `SUPABASE_SERVICE_ROLE_KEY` or `GEMINI_API_KEY` in any file with `"use client"` or in any component passed to the client bundle.
+
+---
+
+## Design System
+
+**Fonts:** Lora (headings) + Lato (body/UI)
+```tsx
+// In layout.tsx
+import { Lora, Lato } from "next/font/google"
+```
+
+**Color palette:**
+```
+Background:       #0c0f0f
+Surface:          #111817
+Surface elevated: #171f1e
+Border:           #1e2d2c
+Primary accent:   #38b2ac
+Primary hover:    #2c9d97
+Primary muted:    #1a3d3c
+Text primary:     #e8efee
+Text secondary:   #8fa8a7
+Text disabled:    #3d5452
+```
+
+Map these to Tailwind custom colors in `tailwind.config.ts` and use those tokens — never hardcode hex values in components.
+
+---
+
+## TypeScript Rules
+
+- No `any` types. Use `unknown` and narrow, or define proper types in `/lib/types`.
+- All Supabase table row types live in `/lib/types/database.ts`.
+- All API request/response shapes are typed in `/lib/types/api.ts`.
+- Use `zod` for runtime validation on all API route inputs.
+
+---
+
+## Data Model Reference
+
+**`inventory` table**
+```ts
+{
+  id: string
+  user_id: string
+  resume_text: string
+  parsed_json: ResumedParsed      // structured resume data
+  interview_answers: Record<string, string>
+  created_at: string
+  updated_at: string
+}
+```
+
+**`applications` table**
+```ts
+{
+  id: string
+  user_id: string
+  company_name: string
+  role_title: string
+  job_description: string
+  resume_markdown: string
+  draft_score: number
+  refined_score: number
+  status: "Applied" | "Phone Screen" | "Interview" | "Offer" | "Rejected"
+  created_at: string
+  updated_at: string
+}
+```
+
+---
+
+## Do Not Do
+
+- Do not write custom input, button, card, or modal components — use shadcn
+- Do not call Gemini API from client components
+- Do not use `any` in TypeScript
+- Do not hardcode color hex values in components — use Tailwind tokens
+- Do not use `next/router` — use `next/navigation`
+- Do not fetch Supabase with the service role key on the client
+- Do not hardcode prompt strings in API routes — put them in `/lib/prompts`
+- Do not use `<a>` tags for internal navigation — use Next.js `<Link>`

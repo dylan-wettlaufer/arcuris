@@ -1,0 +1,59 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# next.js
+.next/
+out/
+next-env.d.ts
+
+# production builds
+build/
+dist/
+
+# local environment files
+.env
+.env.*
+!.env.example
+
+# logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# test and coverage output
+coverage/
+.nyc_output/
+playwright-report/
+test-results/
+
+# caches
+.cache/
+.eslintcache
+.parcel-cache/
+.turbo/
+
+# deployment
+.vercel/
+.netlify/
+
+# typescript
+*.tsbuildinfo
+
+# os files
+.DS_Store
+Thumbs.db
+
+# editor and local tool state
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.cursor/plans/
+
+.env.example
+.env.local
