@@ -39,7 +39,7 @@ export default function Home() {
             <p className="mb-5 inline-flex rounded-full border border-border bg-card px-3 py-1 text-sm text-muted-foreground">
               Resume generation and application tracking for new grads
             </p>
-            <h1 className="max-w-3xl text-4xl font-medium tracking-tight text-foreground sm:text-6xl">
+            <h1 className="max-w-3xl text-4xl font-medium font-serif tracking-tight text-foreground sm:text-6xl">
               Tailor every resume without losing track of every application.
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-muted-foreground">
