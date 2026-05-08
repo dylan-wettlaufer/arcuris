@@ -126,7 +126,7 @@ As a user, I want to log out so that my data is not accessible on shared devices
 
 ### 4.2 Resume Inventory
 
-- User can upload a `.txt` file or paste resume text directly
+- User can upload a pdf file
 - On submission, resume text is sent to Gemini API via Next.js API route for structured JSON extraction
 - Extracted fields: name, email, phone, linkedin, github, summary, education, experience (with bullets), projects (with tech stack and bullets), skills
 - After parsing, Gemini generates 6 targeted follow-up questions based on gaps in the resume
@@ -139,7 +139,7 @@ As a user, I want to log out so that my data is not accessible on shared devices
 
 - User pastes full job description text
 - System runs a three-pass Gemini API loop:
-  - **Pass 1:** Generate a tailored resume in markdown using inventory + JD
+  - **Pass 1:** Generate a tailored resume bullets from expereinces using inventory + JD
   - **Pass 2:** Evaluate draft and return scores (keyword alignment, impact clarity, ATS friendliness, narrative fit) plus top 5 specific improvements
   - **Pass 3:** Apply all improvements and generate refined resume
 - Both draft and refined resume scores are displayed to the user
