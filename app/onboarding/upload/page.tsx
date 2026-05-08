@@ -50,28 +50,32 @@ export default function OnboardingUploadPage() {
       const formData = new FormData();
 
       if (resumeFile !== null) {
-        formData.append("resume_file", resumeFile);
+        formData.append("resumeFile", resumeFile);
       }
 
       if (trimmedResumeText.length > 0) {
-        formData.append("resume_text", trimmedResumeText);
+        formData.append("resumeText", trimmedResumeText);
       }
 
-      const response = await fetch("/api/onboarding/parse-resume", {
+      const response = await fetch("/api/onboarding/parse", {
         method: "POST",
         body: formData
       });
 
       if (!response.ok) {
+        const responseBody = (await response.json().catch(() => null)) as
+          | { error?: string }
+          | null;
         const fallbackMessage =
           response.status >= 500
             ? "Resume parsing failed. Try again in a moment."
             : "Check your resume input and try again.";
 
-        throw new Error(fallbackMessage);
+        throw new Error(responseBody?.error ?? fallbackMessage);
       }
 
-      router.push("/onboarding/interview");
+      const responseBody = (await response.json()) as { redirectTo?: string };
+      router.push(responseBody.redirectTo ?? "/onboarding/interview");
     } catch (submitError: unknown) {
       setError(
         submitError instanceof Error
