@@ -111,11 +111,20 @@ export const resumeScoreSchema = z
   .min(1)
   .max(10);
 
+export const bulletRewriteSchema = z
+  .object({
+    source: z.string().trim().min(1).max(160),
+    originalBullet: z.string().trim().min(1).max(1000),
+    rewrittenBullet: z.string().trim().min(1).max(1000)
+  })
+  .strict();
+
 export const generatedDraftSchema = z
   .object({
     companyName: z.string().trim().min(1).max(120),
     roleTitle: z.string().trim().min(1).max(160),
-    resumeMarkdown: z.string().trim().min(1)
+    resumeMarkdown: z.string().trim().min(1),
+    bulletRewrites: z.array(bulletRewriteSchema).min(1).max(12)
   })
   .strict();
 
@@ -130,10 +139,21 @@ export const resumeEvaluationSchema = z
   })
   .strict();
 
+export const bulletFeedbackSchema = z
+  .object({
+    source: z.string().trim().min(1).max(160),
+    originalBullet: z.string().trim().min(1).max(1000),
+    draftBullet: z.string().trim().min(1).max(1000),
+    rewrittenBullet: z.string().trim().min(1).max(1000),
+    feedback: z.string().trim().min(1).max(600)
+  })
+  .strict();
+
 export const refinedResumeSchema = z
   .object({
     refinedScore: resumeScoreSchema,
-    resumeMarkdown: z.string().trim().min(1)
+    resumeMarkdown: z.string().trim().min(1),
+    bulletFeedback: z.array(bulletFeedbackSchema).min(1).max(12)
   })
   .strict();
 
@@ -149,12 +169,15 @@ export const generatedResumeSchema = z
     impactClarity: resumeScoreSchema,
     atsFriendliness: resumeScoreSchema,
     narrativeFit: resumeScoreSchema,
-    improvements: z.array(z.string().trim().min(1).max(500)).length(5)
+    improvements: z.array(z.string().trim().min(1).max(500)).length(5),
+    bulletFeedback: z.array(bulletFeedbackSchema).min(1).max(12)
   })
   .strict();
 
 export type JobDescriptionRequest = z.infer<typeof jobDescriptionRequestSchema>;
+export type BulletRewrite = z.infer<typeof bulletRewriteSchema>;
 export type GeneratedDraft = z.infer<typeof generatedDraftSchema>;
 export type ResumeEvaluation = z.infer<typeof resumeEvaluationSchema>;
+export type BulletFeedback = z.infer<typeof bulletFeedbackSchema>;
 export type RefinedResume = z.infer<typeof refinedResumeSchema>;
 export type GeneratedResume = z.infer<typeof generatedResumeSchema>;

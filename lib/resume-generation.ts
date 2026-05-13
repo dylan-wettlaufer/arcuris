@@ -21,29 +21,6 @@ function parseJsonFromText(text: string): unknown {
   return JSON.parse(trimmedText) as unknown;
 }
 
-function formatOriginalBullets(parsedResume: ParsedResume): string {
-  const experienceBullets = parsedResume.experience.flatMap((experience) =>
-    experience.bullets.map(
-      (bullet) =>
-        `Experience - ${experience.role ?? "Role"} at ${
-          experience.company ?? "Company"
-        }: ${bullet}`
-    )
-  );
-  const projectBullets = parsedResume.projects.flatMap((project) =>
-    project.bullets.map(
-      (bullet) => `Project - ${project.name ?? "Project"}: ${bullet}`
-    )
-  );
-  const bullets = [...experienceBullets, ...projectBullets];
-
-  if (bullets.length === 0) {
-    return "No original experience or project bullets were parsed.";
-  }
-
-  return bullets.map((bullet) => `- ${bullet}`).join("\n");
-}
-
 async function generateJsonContent({
   contents,
   systemInstruction
@@ -81,8 +58,6 @@ export async function generateTailoredResume({
   interviewAnswers: InterviewAnswersRecord;
   jobDescription: string;
 }): Promise<GeneratedResume> {
-  const originalBullets = formatOriginalBullets(parsedResume);
-
   const draft = generatedDraftSchema.parse(
     await generateJsonContent({
       contents: buildDraftResumePrompt({
@@ -99,7 +74,7 @@ export async function generateTailoredResume({
     await generateJsonContent({
       contents: buildEvaluateResumePrompt({
         draftResumeMarkdown: draft.resumeMarkdown,
-        originalBullets,
+        draftBulletRewrites: draft.bulletRewrites,
         jobDescription
       }),
       systemInstruction:
@@ -111,8 +86,8 @@ export async function generateTailoredResume({
     await generateJsonContent({
       contents: buildRefineResumePrompt({
         draftResumeMarkdown: draft.resumeMarkdown,
+        draftBulletRewrites: draft.bulletRewrites,
         evaluation,
-        originalBullets,
         jobDescription
       }),
       systemInstruction:
@@ -131,6 +106,7 @@ export async function generateTailoredResume({
     impactClarity: evaluation.impactClarity,
     atsFriendliness: evaluation.atsFriendliness,
     narrativeFit: evaluation.narrativeFit,
-    improvements: evaluation.improvements
+    improvements: evaluation.improvements,
+    bulletFeedback: refined.bulletFeedback
   });
 }

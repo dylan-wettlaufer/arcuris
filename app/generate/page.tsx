@@ -34,7 +34,7 @@ export default async function GeneratePage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-4xl flex-col px-6 py-12">
+    <main className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-6 py-12">
       <div className="mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="mb-3 inline-flex rounded-full border border-border bg-card px-3 py-1 text-sm text-muted-foreground">

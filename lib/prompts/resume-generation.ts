@@ -1,4 +1,5 @@
 import {
+  type BulletRewrite,
   type InterviewAnswersRecord,
   type ParsedResume,
   type ResumeEvaluation
@@ -21,13 +22,23 @@ Return only JSON with this exact shape:
 {
   "companyName": "company extracted from the job description, or Unknown Company",
   "roleTitle": "role title extracted from the job description, or Software Engineer",
-  "resumeMarkdown": "ATS-safe one-page resume in markdown"
+  "resumeMarkdown": "ATS-safe one-page resume in markdown",
+  "bulletRewrites": [
+    {
+      "source": "experience or project label",
+      "originalBullet": "original source bullet",
+      "rewrittenBullet": "draft rewritten bullet that appears in resumeMarkdown"
+    }
+  ]
 }
 
 Resume requirements:
 - Use only facts supported by the parsed resume and interview answers.
 - Emphasize the experiences, projects, skills, and impact most relevant to the job description.
 - Rewrite bullets to be specific, metric-aware, and action-oriented.
+- bulletRewrites must include the important rewritten experience/project bullets used in resumeMarkdown, up to 12 items.
+- Each rewrittenBullet must be a real bullet that appears in resumeMarkdown.
+- Each rewrittenBullet should materially differ from the originalBullet by using stronger ATS-aligned language when the source supports it.
 - Keep the resume concise enough for one page.
 - Use simple markdown headings and bullets. Do not include commentary outside JSON.
 
@@ -43,14 +54,14 @@ ${jobDescription}`;
 
 export function buildEvaluateResumePrompt({
   draftResumeMarkdown,
-  originalBullets,
+  draftBulletRewrites,
   jobDescription
 }: {
   draftResumeMarkdown: string;
-  originalBullets: string;
+  draftBulletRewrites: BulletRewrite[];
   jobDescription: string;
 }): string {
-  return `Evaluate only the rewritten resume bullets against the original source bullets and the job description.
+  return `Evaluate only these draft rewritten resume bullets against their original source bullets and the job description.
 
 Return only JSON with this exact shape:
 {
@@ -77,10 +88,10 @@ Scoring rules:
 - Penalize invented claims, inflated scope, vague rewrites, weak action verbs, missing metrics that were present in the originals, and missed opportunities to mirror JD language.
 - Improvements must be concrete bullet-level edits that can be applied in the next pass.
 
-Original source bullets:
-${originalBullets}
+Draft bullet rewrites to evaluate:
+${JSON.stringify(draftBulletRewrites)}
 
-AI-rewritten draft resume:
+Full draft resume context:
 ${draftResumeMarkdown}
 
 Job description:
@@ -89,13 +100,13 @@ ${jobDescription}`;
 
 export function buildRefineResumePrompt({
   draftResumeMarkdown,
+  draftBulletRewrites,
   evaluation,
-  originalBullets,
   jobDescription
 }: {
   draftResumeMarkdown: string;
+  draftBulletRewrites: BulletRewrite[];
   evaluation: ResumeEvaluation;
-  originalBullets: string;
   jobDescription: string;
 }): string {
   return `Apply every bullet-level improvement to produce the final tailored resume.
@@ -103,11 +114,26 @@ export function buildRefineResumePrompt({
 Return only JSON with this exact shape:
 {
   "refinedScore": 1,
-  "resumeMarkdown": "final ATS-safe one-page resume in markdown"
+  "resumeMarkdown": "final ATS-safe one-page resume in markdown",
+  "bulletFeedback": [
+    {
+      "source": "experience or project label",
+      "originalBullet": "original source bullet",
+      "draftBullet": "draft rewritten bullet from the previous pass",
+      "rewrittenBullet": "final rewritten bullet",
+      "feedback": "what changed during refinement and why it improves ATS alignment"
+    }
+  ]
 }
 
 Rules:
 - refinedScore must be an integer from 1 to 10 after improvements are applied.
+- bulletFeedback must include every item from draftBulletRewrites unless a bullet is removed for quality.
+- Each bulletFeedback item must compare one original source bullet to the final rewritten bullet.
+- draftBullet must exactly match the previous draft rewritten bullet for that item.
+- rewrittenBullet must be the final bullet text and must appear in resumeMarkdown.
+- When source facts allow it, rewrittenBullet should materially differ from draftBullet by applying the evaluation improvements.
+- The feedback must explain the refinement-stage change: JD language matched, stronger verb, clearer metric, tighter scope, or truthfulness correction.
 - Keep every rewritten bullet truthful to the original source bullets and interview context.
 - Improve ATS alignment by matching the job description's language where the source bullets support it.
 - Do not add technologies, tools, metrics, credentials, or responsibilities that are not supported by the source material.
@@ -115,8 +141,8 @@ Rules:
 - Prefer strong relevant bullets over keyword stuffing.
 - Do not include commentary outside JSON.
 
-Original source bullets:
-${originalBullets}
+Draft bullet rewrites:
+${JSON.stringify(draftBulletRewrites)}
 
 Draft resume:
 ${draftResumeMarkdown}
