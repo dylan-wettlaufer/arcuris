@@ -36,12 +36,18 @@ export default async function DashboardPage() {
           </Link>
           <Link
             className="rounded-lg bg-primary px-3 py-2 font-medium text-primary-foreground transition hover:opacity-90"
+            href="/generate"
+          >
+            Generate resume
+          </Link>
+          <Link
+            className="rounded-lg border border-border bg-secondary px-3 py-2 text-foreground transition hover:bg-muted"
             href="/onboarding/upload"
           >
             Upload resume
           </Link>
           <span className="text-muted-foreground">
-            Onboarding and generate routes will wire in next.
+            Application records will appear here after generation is wired.
           </span>
         </nav>
         <form action={signOut}>
