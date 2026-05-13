@@ -1,7 +1,10 @@
-import { extractStructuredResume } from "@/lib/resume-parsing";
+import {
+  extractStructuredResume,
+  generateInterviewQuestions
+} from "@/lib/resume-parsing";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import { type ParsedResume } from "@/lib/types";
+import { type InterviewQuestion, type ParsedResume } from "@/lib/types";
 import { NextResponse } from "next/server";
 import type { Output } from "pdf2json";
 import { z } from "zod";
@@ -44,6 +47,7 @@ type ParseResponse =
   | {
       redirectTo: string;
       parsedJson: ParsedResume;
+    interviewQuestions: InterviewQuestion[];
     }
   | {
       error: string;
@@ -183,12 +187,14 @@ export async function POST(request: Request): Promise<NextResponse<ParseResponse
 
   try {
     const parsedJson = await extractStructuredResume(resumeText);
+    const interviewQuestions = await generateInterviewQuestions(parsedJson);
     const adminSupabase = createAdminClient();
     const { error: upsertError } = await adminSupabase.from("inventory").upsert(
       {
         user_id: user.id,
         resume_text: resumeText,
         parsed_json: parsedJson,
+        interview_questions: interviewQuestions,
         interview_answers: {}
       },
       { onConflict: "user_id" }
@@ -200,7 +206,8 @@ export async function POST(request: Request): Promise<NextResponse<ParseResponse
 
     return NextResponse.json({
       redirectTo: parseSuccessRedirect,
-      parsedJson
+      parsedJson,
+      interviewQuestions
     });
   } catch (parseError: unknown) {
     return NextResponse.json(
