@@ -100,6 +100,7 @@ export async function generateTailoredResume({
     roleTitle: draft.roleTitle,
     draftResumeMarkdown: draft.resumeMarkdown,
     refinedResumeMarkdown: refined.resumeMarkdown,
+    resumeJson: refined.resumeJson,
     draftScore: evaluation.draftScore,
     refinedScore: refined.refinedScore,
     keywordAlignment: evaluation.keywordAlignment,

@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "latex:dev": "npm --prefix latex-service start",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"

@@ -119,11 +119,70 @@ export const bulletRewriteSchema = z
   })
   .strict();
 
+const generatedResumeContactSchema = z
+  .object({
+    name: z.string().trim().min(1).max(160),
+    email: nullableTextSchema,
+    phone: nullableTextSchema,
+    linkedin: nullableTextSchema,
+    github: nullableTextSchema,
+    location: nullableTextSchema
+  })
+  .strict();
+
+const generatedResumeEducationSchema = z
+  .object({
+    institution: z.string().trim().min(1).max(160),
+    degree: nullableTextSchema,
+    location: nullableTextSchema,
+    dates: nullableTextSchema,
+    details: z.array(z.string().trim().min(1).max(240)).max(4)
+  })
+  .strict();
+
+const generatedResumeExperienceSchema = z
+  .object({
+    company: z.string().trim().min(1).max(160),
+    role: z.string().trim().min(1).max(160),
+    location: nullableTextSchema,
+    dates: nullableTextSchema,
+    bullets: z.array(z.string().trim().min(1).max(500)).min(1).max(5)
+  })
+  .strict();
+
+const generatedResumeProjectSchema = z
+  .object({
+    name: z.string().trim().min(1).max(160),
+    techStack: z.array(z.string().trim().min(1).max(80)).max(12),
+    dates: nullableTextSchema,
+    bullets: z.array(z.string().trim().min(1).max(500)).min(1).max(5)
+  })
+  .strict();
+
+const generatedResumeSkillGroupSchema = z
+  .object({
+    category: z.string().trim().min(1).max(80),
+    items: z.array(z.string().trim().min(1).max(80)).min(1).max(24)
+  })
+  .strict();
+
+export const generatedResumeJsonSchema = z
+  .object({
+    contact: generatedResumeContactSchema,
+    summary: z.string().trim().min(1).max(800),
+    education: z.array(generatedResumeEducationSchema).min(1).max(4),
+    experience: z.array(generatedResumeExperienceSchema).min(1).max(5),
+    projects: z.array(generatedResumeProjectSchema).max(5),
+    skills: z.array(generatedResumeSkillGroupSchema).min(1).max(8)
+  })
+  .strict();
+
 export const generatedDraftSchema = z
   .object({
     companyName: z.string().trim().min(1).max(120),
     roleTitle: z.string().trim().min(1).max(160),
     resumeMarkdown: z.string().trim().min(1),
+    resumeJson: generatedResumeJsonSchema,
     bulletRewrites: z.array(bulletRewriteSchema).min(1).max(12)
   })
   .strict();
@@ -153,6 +212,7 @@ export const refinedResumeSchema = z
   .object({
     refinedScore: resumeScoreSchema,
     resumeMarkdown: z.string().trim().min(1),
+    resumeJson: generatedResumeJsonSchema,
     bulletFeedback: z.array(bulletFeedbackSchema).min(1).max(12)
   })
   .strict();
@@ -163,6 +223,7 @@ export const generatedResumeSchema = z
     roleTitle: z.string().trim().min(1).max(160),
     draftResumeMarkdown: z.string().trim().min(1),
     refinedResumeMarkdown: z.string().trim().min(1),
+    resumeJson: generatedResumeJsonSchema,
     draftScore: resumeScoreSchema,
     refinedScore: resumeScoreSchema,
     keywordAlignment: resumeScoreSchema,
@@ -176,6 +237,7 @@ export const generatedResumeSchema = z
 
 export type JobDescriptionRequest = z.infer<typeof jobDescriptionRequestSchema>;
 export type BulletRewrite = z.infer<typeof bulletRewriteSchema>;
+export type GeneratedResumeJson = z.infer<typeof generatedResumeJsonSchema>;
 export type GeneratedDraft = z.infer<typeof generatedDraftSchema>;
 export type ResumeEvaluation = z.infer<typeof resumeEvaluationSchema>;
 export type BulletFeedback = z.infer<typeof bulletFeedbackSchema>;

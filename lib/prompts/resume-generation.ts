@@ -23,6 +23,49 @@ Return only JSON with this exact shape:
   "companyName": "company extracted from the job description, or Unknown Company",
   "roleTitle": "role title extracted from the job description, or Software Engineer",
   "resumeMarkdown": "ATS-safe one-page resume in markdown",
+  "resumeJson": {
+    "contact": {
+      "name": "candidate name",
+      "email": "candidate email or null",
+      "phone": "candidate phone or null",
+      "linkedin": "candidate LinkedIn or null",
+      "github": "candidate GitHub or null",
+      "location": "candidate location or null"
+    },
+    "summary": "2-3 line tailored summary",
+    "education": [
+      {
+        "institution": "school name",
+        "degree": "degree or null",
+        "location": "location or null",
+        "dates": "date range or null",
+        "details": ["optional concise detail"]
+      }
+    ],
+    "experience": [
+      {
+        "company": "company name",
+        "role": "role title",
+        "location": "location or null",
+        "dates": "date range or null",
+        "bullets": ["tailored bullet"]
+      }
+    ],
+    "projects": [
+      {
+        "name": "project name",
+        "techStack": ["technology"],
+        "dates": "date range or null",
+        "bullets": ["tailored bullet"]
+      }
+    ],
+    "skills": [
+      {
+        "category": "Languages",
+        "items": ["Python"]
+      }
+    ]
+  },
   "bulletRewrites": [
     {
       "source": "experience or project label",
@@ -40,6 +83,8 @@ Resume requirements:
 - Each rewrittenBullet must be a real bullet that appears in resumeMarkdown.
 - Each rewrittenBullet should materially differ from the originalBullet by using stronger ATS-aligned language when the source supports it.
 - Keep the resume concise enough for one page.
+- resumeJson must contain the same resume content as resumeMarkdown, but structured for LaTeX rendering.
+- Keep section ordering suitable for a Jake's Resume style layout: contact, summary, education, experience, projects, skills.
 - Use simple markdown headings and bullets. Do not include commentary outside JSON.
 
 Parsed resume:
@@ -115,6 +160,49 @@ Return only JSON with this exact shape:
 {
   "refinedScore": 1,
   "resumeMarkdown": "final ATS-safe one-page resume in markdown",
+  "resumeJson": {
+    "contact": {
+      "name": "candidate name",
+      "email": "candidate email or null",
+      "phone": "candidate phone or null",
+      "linkedin": "candidate LinkedIn or null",
+      "github": "candidate GitHub or null",
+      "location": "candidate location or null"
+    },
+    "summary": "2-3 line tailored summary",
+    "education": [
+      {
+        "institution": "school name",
+        "degree": "degree or null",
+        "location": "location or null",
+        "dates": "date range or null",
+        "details": ["optional concise detail"]
+      }
+    ],
+    "experience": [
+      {
+        "company": "company name",
+        "role": "role title",
+        "location": "location or null",
+        "dates": "date range or null",
+        "bullets": ["tailored bullet"]
+      }
+    ],
+    "projects": [
+      {
+        "name": "project name",
+        "techStack": ["technology"],
+        "dates": "date range or null",
+        "bullets": ["tailored bullet"]
+      }
+    ],
+    "skills": [
+      {
+        "category": "Languages",
+        "items": ["Python"]
+      }
+    ]
+  },
   "bulletFeedback": [
     {
       "source": "experience or project label",
@@ -138,6 +226,8 @@ Rules:
 - Improve ATS alignment by matching the job description's language where the source bullets support it.
 - Do not add technologies, tools, metrics, credentials, or responsibilities that are not supported by the source material.
 - Preserve an ATS-safe structure: contact, summary, education, experience, projects, skills.
+- resumeJson must contain the same final resume content as resumeMarkdown, but structured for LaTeX rendering.
+- Keep resumeJson concise enough for a one-page Jake's Resume style PDF.
 - Prefer strong relevant bullets over keyword stuffing.
 - Do not include commentary outside JSON.
 

@@ -1,22 +1,12 @@
-"use client";
-
-import { AlertCircle, Printer } from "lucide-react";
+import { Download } from "lucide-react";
 import { type BulletFeedback } from "@/lib/types";
-import { useState } from "react";
 
 type ResumeViewerProps = {
+  applicationId: string;
   bulletFeedback: BulletFeedback[];
+  hasStructuredPdf: boolean;
   resumeMarkdown: string;
 };
-
-function escapeHtml(value: string): string {
-  return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
 
 function normalizeMarkdownLine(line: string): string {
   return line
@@ -83,72 +73,13 @@ function JakeResumePreview({ resumeMarkdown }: { resumeMarkdown: string }) {
 }
 
 export function ResumeViewer({
+  applicationId,
   bulletFeedback,
+  hasStructuredPdf,
   resumeMarkdown
 }: ResumeViewerProps) {
-  const [error, setError] = useState<string | null>(null);
-
-  function handlePrintResume() {
-    setError(null);
-
-    const printWindow = window.open("", "_blank", "noopener,noreferrer");
-
-    if (printWindow === null) {
-      setError("Allow popups to print the generated resume.");
-      return;
-    }
-
-    const resumeLines = resumeMarkdown
-      .split("\n")
-      .map((line) => normalizeMarkdownLine(line))
-      .filter((line) => line.length > 0)
-      .join("\n");
-
-    printWindow.document.write(`<!doctype html>
-<html>
-  <head>
-    <title>Generated Resume</title>
-    <style>
-      body {
-        color: #000;
-        font-family: "Times New Roman", Times, serif;
-        line-height: 1.15;
-        margin: 0;
-        padding: 0.45in 0.55in;
-      }
-
-      pre {
-        font-family: "Times New Roman", Times, serif;
-        font-size: 10px;
-        white-space: pre-wrap;
-      }
-
-      @page {
-        margin: 0.45in;
-      }
-    </style>
-  </head>
-  <body>
-    <pre>${escapeHtml(resumeLines)}</pre>
-  </body>
-</html>`);
-    printWindow.document.close();
-    printWindow.focus();
-    printWindow.print();
-  }
-
   return (
     <section className="grid gap-6">
-      {error !== null ? (
-        <div
-          className="flex gap-3 rounded-lg border border-destructive/50 bg-destructive/15 px-4 py-3 text-sm text-destructive-foreground"
-          role="alert"
-        >
-          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-          <span>{error}</span>
-        </div>
-      ) : null}
-
       <div className="grid gap-6 lg:grid-cols-[minmax(0,0.85fr)_minmax(460px,1.15fr)]">
         <section className="grid content-start gap-4 rounded-2xl border border-border bg-card p-6">
           <div>
@@ -226,14 +157,20 @@ export function ResumeViewer({
                 Jake-style single-page PDF layout preview.
               </p>
             </div>
-            <button
-              className="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:opacity-90"
-              onClick={handlePrintResume}
-              type="button"
-            >
-              <Printer className="mr-2 h-4 w-4" aria-hidden="true" />
-              Print PDF
-            </button>
+            {hasStructuredPdf ? (
+              <a
+                className="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:opacity-90"
+                download
+                href={`/api/applications/${applicationId}/pdf`}
+              >
+                <Download className="mr-2 h-4 w-4" aria-hidden="true" />
+                Download PDF
+              </a>
+            ) : (
+              <span className="inline-flex items-center justify-center rounded-lg border border-border bg-secondary px-4 py-2 text-sm font-medium text-muted-foreground">
+                PDF unavailable
+              </span>
+            )}
           </div>
           <div className="overflow-auto rounded-xl border border-border bg-secondary p-4">
             <JakeResumePreview resumeMarkdown={resumeMarkdown} />

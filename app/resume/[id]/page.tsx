@@ -34,7 +34,7 @@ export default async function ResumePage({ params }: ResumePageProps) {
   const { data: application, error } = await supabase
     .from("applications")
     .select(
-      "id, company_name, role_title, job_description, resume_markdown, bullet_feedback, draft_score, refined_score, status, created_at"
+      "id, company_name, role_title, job_description, resume_markdown, resume_json, bullet_feedback, draft_score, refined_score, status, created_at"
     )
     .eq("id", params.id)
     .eq("user_id", user.id)
@@ -85,7 +85,9 @@ export default async function ResumePage({ params }: ResumePageProps) {
       </div>
 
       <ResumeViewer
+        applicationId={application.id as string}
         bulletFeedback={bulletFeedback}
+        hasStructuredPdf={application.resume_json !== null}
         resumeMarkdown={application.resume_markdown as string}
       />
 
