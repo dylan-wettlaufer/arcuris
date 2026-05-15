@@ -111,6 +111,7 @@ export async function POST(
       role_title: parsedGeneratedResume.roleTitle,
       job_description: jobDescription,
       resume_markdown: parsedGeneratedResume.refinedResumeMarkdown,
+      bullet_feedback: parsedGeneratedResume.bulletFeedback,
       draft_score: parsedGeneratedResume.draftScore,
       refined_score: parsedGeneratedResume.refinedScore
     })

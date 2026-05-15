@@ -1,7 +1,9 @@
 import { ResumeViewer } from "@/components/resume/resume-viewer";
 import { createClient } from "@/lib/supabase/server";
+import { bulletFeedbackSchema } from "@/lib/types";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { z } from "zod";
 
 type ResumePageProps = {
   params: {
@@ -17,6 +19,8 @@ function formatDate(value: string): string {
   }).format(new Date(value));
 }
 
+const bulletFeedbackListSchema = z.array(bulletFeedbackSchema);
+
 export default async function ResumePage({ params }: ResumePageProps) {
   const supabase = createClient();
   const {
@@ -30,7 +34,7 @@ export default async function ResumePage({ params }: ResumePageProps) {
   const { data: application, error } = await supabase
     .from("applications")
     .select(
-      "id, company_name, role_title, job_description, resume_markdown, draft_score, refined_score, status, created_at"
+      "id, company_name, role_title, job_description, resume_markdown, bullet_feedback, draft_score, refined_score, status, created_at"
     )
     .eq("id", params.id)
     .eq("user_id", user.id)
@@ -43,6 +47,10 @@ export default async function ResumePage({ params }: ResumePageProps) {
   if (application === null) {
     notFound();
   }
+
+  const bulletFeedback = bulletFeedbackListSchema
+    .catch([])
+    .parse(application.bullet_feedback);
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-6 py-12">
@@ -77,8 +85,7 @@ export default async function ResumePage({ params }: ResumePageProps) {
       </div>
 
       <ResumeViewer
-        companyName={application.company_name as string}
-        roleTitle={application.role_title as string}
+        bulletFeedback={bulletFeedback}
         resumeMarkdown={application.resume_markdown as string}
       />
 

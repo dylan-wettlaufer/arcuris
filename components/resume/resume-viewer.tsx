@@ -1,11 +1,11 @@
 "use client";
 
 import { AlertCircle, Printer } from "lucide-react";
+import { type BulletFeedback } from "@/lib/types";
 import { useState } from "react";
 
 type ResumeViewerProps = {
-  companyName: string;
-  roleTitle: string;
+  bulletFeedback: BulletFeedback[];
   resumeMarkdown: string;
 };
 
@@ -83,8 +83,7 @@ function JakeResumePreview({ resumeMarkdown }: { resumeMarkdown: string }) {
 }
 
 export function ResumeViewer({
-  companyName,
-  roleTitle,
+  bulletFeedback,
   resumeMarkdown
 }: ResumeViewerProps) {
   const [error, setError] = useState<string | null>(null);
@@ -108,7 +107,7 @@ export function ResumeViewer({
     printWindow.document.write(`<!doctype html>
 <html>
   <head>
-    <title>${escapeHtml(roleTitle)} Resume</title>
+    <title>Generated Resume</title>
     <style>
       body {
         color: #000;
@@ -140,23 +139,6 @@ export function ResumeViewer({
 
   return (
     <section className="grid gap-6">
-      <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-6 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <p className="text-sm text-muted-foreground">Generated resume</p>
-          <h2 className="mt-1 text-2xl font-medium tracking-tight text-foreground">
-            {companyName} - {roleTitle}
-          </h2>
-        </div>
-        <button
-          className="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:opacity-90"
-          onClick={handlePrintResume}
-          type="button"
-        >
-          <Printer className="mr-2 h-4 w-4" aria-hidden="true" />
-          Print PDF
-        </button>
-      </div>
-
       {error !== null ? (
         <div
           className="flex gap-3 rounded-lg border border-destructive/50 bg-destructive/15 px-4 py-3 text-sm text-destructive-foreground"
@@ -171,25 +153,87 @@ export function ResumeViewer({
         <section className="grid content-start gap-4 rounded-2xl border border-border bg-card p-6">
           <div>
             <h3 className="text-lg font-medium text-foreground">
-              Resume markdown
+              Bullet changes
             </h3>
             <p className="mt-1 text-sm text-muted-foreground">
-              Stored output for this application record.
+              Original vault bullets and the tailored changes made for this
+              application.
             </p>
           </div>
-          <pre className="max-h-[720px] overflow-auto whitespace-pre-wrap rounded-lg border border-border bg-secondary p-4 font-mono text-xs leading-5 text-foreground">
-            {resumeMarkdown}
-          </pre>
+
+          {bulletFeedback.length > 0 ? (
+            <div className="grid max-h-[760px] gap-4 overflow-auto pr-1">
+              {bulletFeedback.map((item, index) => (
+                <article
+                  className="grid gap-3 rounded-xl border border-border bg-secondary p-4"
+                  key={`${item.source}-${index}`}
+                >
+                  <p className="text-xs font-medium uppercase text-muted-foreground">
+                    {item.source}
+                  </p>
+
+                  <div className="grid gap-3">
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground">
+                        Original vault bullet
+                      </p>
+                      <p className="mt-1 text-sm leading-6 text-foreground">
+                        {item.originalBullet}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground">
+                        Tailored resume bullet
+                      </p>
+                      <p className="mt-1 text-sm leading-6 text-foreground">
+                        {item.rewrittenBullet}
+                      </p>
+                    </div>
+
+                    <div className="rounded-lg border border-border bg-card p-3">
+                      <p className="text-xs font-medium text-muted-foreground">
+                        What changed
+                      </p>
+                      <p className="mt-1 text-sm leading-6 text-foreground">
+                        {item.feedback}
+                      </p>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-xl border border-dashed border-border bg-secondary p-5">
+              <p className="text-sm font-medium text-foreground">
+                Bullet history was not saved for this application.
+              </p>
+              <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                New generated resumes will show original vault bullets beside
+                the AI-tailored rewrites here.
+              </p>
+            </div>
+          )}
         </section>
 
         <section className="grid content-start gap-4 rounded-2xl border border-border bg-card p-6">
-          <div>
-            <h3 className="text-lg font-medium text-foreground">
-              Resume preview
-            </h3>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Jake-style single-page PDF layout preview.
-            </p>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h3 className="text-lg font-medium text-foreground">
+                Resume preview
+              </h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Jake-style single-page PDF layout preview.
+              </p>
+            </div>
+            <button
+              className="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:opacity-90"
+              onClick={handlePrintResume}
+              type="button"
+            >
+              <Printer className="mr-2 h-4 w-4" aria-hidden="true" />
+              Print PDF
+            </button>
           </div>
           <div className="overflow-auto rounded-xl border border-border bg-secondary p-4">
             <JakeResumePreview resumeMarkdown={resumeMarkdown} />
