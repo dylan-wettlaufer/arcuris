@@ -5,7 +5,7 @@ const path = require("path");
 const { v4: uuidv4 } = require("uuid");
 
 const app = express();
-const port = Number(process.env.PORT ?? 3001);
+const port = Number(process.env.PORT ?? 8000);
 app.use(express.json({ limit: "5mb" }));
 
 app.post("/compile", (req, res) => {

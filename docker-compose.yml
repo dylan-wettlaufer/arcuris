@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  latex:
+    build: ./latex-service
+    ports:
+      - "8000:8000"
+
+  ai-service:
+    build: ./ai-service
+    ports:
+      - "8001:8000"
+    depends_on:
+      - redis
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"

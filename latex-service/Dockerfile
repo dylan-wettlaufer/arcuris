@@ -22,5 +22,5 @@ RUN npm install
 # Copy server file
 COPY server.js .
 
-EXPOSE 3001
+EXPOSE 8000
 CMD ["node", "server.js"]
