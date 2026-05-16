@@ -1,4 +1,4 @@
-"""Mirrors lib/prompts/resume-generation.ts — keep in sync when prompts change."""
+"""User and system prompts for resume generation (authoritative copy)."""
 
 import json
 from typing import Any

@@ -1,4 +1,4 @@
-"""Gemini JSON generation — parity with lib/resume-generation.ts + lib/gemini.ts."""
+"""Gemini JSON generation for resume pipeline tasks."""
 
 from __future__ import annotations
 

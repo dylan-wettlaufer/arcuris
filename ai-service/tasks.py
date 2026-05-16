@@ -1,4 +1,4 @@
-"""Three-pass resume generation task — mirrors lib/resume-generation.ts."""
+"""Three-pass resume generation task (draft → evaluate → refine)."""
 
 from __future__ import annotations
 
