@@ -7,16 +7,36 @@ import { useState, type FormEvent } from "react";
 const maxJobDescriptionLength = 60_000;
 const minJobDescriptionLength = 200;
 
-type GenerateResult = {
-  applicationId: string;
-  error?: string;
-};
+const pollIntervalMs = 2500;
+const maxPollAttempts = 120;
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
+type EnqueueResponse = { taskId?: string; error?: string };
+
+type StatusResponse =
+  | { status: "PENDING" }
+  | { status: "FAILURE"; error: string }
+  | { status: "SUCCESS"; applicationId: string };
+
+function isStatusResponse(value: unknown): value is StatusResponse {
+  if (typeof value !== "object" || value === null || !("status" in value)) {
+    return false;
+  }
+  const status = (value as { status: unknown }).status;
+  return status === "PENDING" || status === "FAILURE" || status === "SUCCESS";
+}
 
 export function JobDescriptionForm() {
   const router = useRouter();
   const [jobDescription, setJobDescription] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [statusLabel, setStatusLabel] = useState<string | null>(null);
 
   const trimmedJobDescription = jobDescription.trim();
   const canContinue =
@@ -26,6 +46,7 @@ export function JobDescriptionForm() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
+    setStatusLabel(null);
 
     if (trimmedJobDescription.length < minJobDescriptionLength) {
       setError("Paste the full job description before generating.");
@@ -44,7 +65,7 @@ export function JobDescriptionForm() {
       });
 
       const responseBody = (await response.json().catch(() => null)) as
-        | GenerateResult
+        | EnqueueResponse
         | null;
 
       if (!response.ok) {
@@ -53,12 +74,68 @@ export function JobDescriptionForm() {
         );
       }
 
-      if (responseBody === null || responseBody.error !== undefined) {
-        throw new Error(responseBody?.error ?? "Resume generation failed.");
+      if (
+        responseBody === null ||
+        typeof responseBody.taskId !== "string" ||
+        responseBody.taskId.length < 1
+      ) {
+        throw new Error(
+          responseBody?.error ?? "Resume generation failed to start."
+        );
       }
 
-      router.push(`/resume/${responseBody.applicationId}`);
-      router.refresh();
+      const taskId = responseBody.taskId;
+
+      for (let attempt = 0; attempt < maxPollAttempts; attempt += 1) {
+        setStatusLabel(
+          attempt === 0
+            ? "Queued — running three-pass review…"
+            : "Still generating — you can keep this tab open…"
+        );
+        if (attempt > 0) {
+          await sleep(pollIntervalMs);
+        }
+
+        const statusResponse = await fetch(
+          `/api/generate?taskId=${encodeURIComponent(taskId)}`,
+          { method: "GET" }
+        );
+
+        const statusBody: unknown = await statusResponse
+          .json()
+          .catch(() => null);
+
+        if (!statusResponse.ok) {
+          const message =
+            typeof statusBody === "object" &&
+            statusBody !== null &&
+            "error" in statusBody &&
+            typeof (statusBody as { error: unknown }).error === "string"
+              ? (statusBody as { error: string }).error
+              : "Status check failed.";
+          throw new Error(message);
+        }
+
+        if (!isStatusResponse(statusBody)) {
+          throw new Error("Unexpected response from server.");
+        }
+
+        if (statusBody.status === "PENDING") {
+          continue;
+        }
+
+        if (statusBody.status === "FAILURE") {
+          throw new Error(statusBody.error);
+        }
+
+        router.push(`/resume/${statusBody.applicationId}`);
+        router.refresh();
+        return;
+      }
+
+      throw new Error(
+        "Generation is taking longer than expected. Try again in a minute."
+      );
     } catch (submitError: unknown) {
       setError(
         submitError instanceof Error
@@ -66,6 +143,7 @@ export function JobDescriptionForm() {
           : "Resume generation failed. Try again."
       );
       setPending(false);
+      setStatusLabel(null);
     }
   }
 
@@ -127,7 +205,7 @@ export function JobDescriptionForm() {
           {pending ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
-              Running three-pass review
+              {statusLabel ?? "Running three-pass review"}
             </>
           ) : (
             <>
