@@ -1,10 +1,12 @@
 import { Download } from "lucide-react";
-import { type BulletFeedback } from "@/lib/types";
+import { JakeResumeStructuredPreview } from "@/components/resume/jake-resume-structured-preview";
+import { resumePreviewFontClass } from "@/components/resume/resume-preview-font";
+import { type BulletFeedback, type GeneratedResumeJson } from "@/lib/types";
 
 type ResumeViewerProps = {
   applicationId: string;
   bulletFeedback: BulletFeedback[];
-  hasStructuredPdf: boolean;
+  resumeJson: GeneratedResumeJson | null;
   resumeMarkdown: string;
 };
 
@@ -16,7 +18,11 @@ function normalizeMarkdownLine(line: string): string {
     .trim();
 }
 
-function JakeResumePreview({ resumeMarkdown }: { resumeMarkdown: string }) {
+function JakeResumeMarkdownPreview({
+  resumeMarkdown
+}: {
+  resumeMarkdown: string;
+}) {
   const lines = resumeMarkdown
     .split("\n")
     .map((line) => normalizeMarkdownLine(line))
@@ -26,19 +32,21 @@ function JakeResumePreview({ resumeMarkdown }: { resumeMarkdown: string }) {
   const bodyLines = lines.slice(contactLine.length > 0 ? 2 : 1);
 
   return (
-    <div className="aspect-[8.5/11] w-full overflow-hidden bg-white p-8 text-black shadow-xl">
+    <div
+      className={`aspect-[8.5/11] w-full overflow-hidden bg-white p-[0.55in] text-neutral-950 shadow-xl ${resumePreviewFontClass}`}
+    >
       <div className="text-center">
-        <h2 className="font-serif text-[22px] leading-tight text-black">
+        <h2 className="text-[21pt] font-medium leading-[1.15] tracking-tight text-neutral-950">
           {name}
         </h2>
         {contactLine.length > 0 ? (
-          <p className="mt-1 font-serif text-[9px] leading-tight text-black">
+          <p className="mt-1 text-[9.5pt] leading-normal text-neutral-800">
             {contactLine}
           </p>
         ) : null}
       </div>
 
-      <div className="mt-4 space-y-1.5 font-serif text-[9.5px] leading-snug text-black">
+      <div className="mt-4 space-y-1.5 text-[10pt] leading-[1.42] text-neutral-950">
         {bodyLines.map((line, index) => {
           const isBullet = line.startsWith("- ");
           const nextLine = bodyLines[index + 1] ?? "";
@@ -51,7 +59,7 @@ function JakeResumePreview({ resumeMarkdown }: { resumeMarkdown: string }) {
           if (isSection) {
             return (
               <div className="pt-2" key={`${line}-${index}`}>
-                <h3 className="border-b border-black pb-0.5 text-[10px] uppercase tracking-normal">
+                <h3 className="border-b-[0.5px] border-neutral-800 pb-1 text-[11pt] font-medium uppercase tracking-[0.06em]">
                   {line}
                 </h3>
               </div>
@@ -60,7 +68,7 @@ function JakeResumePreview({ resumeMarkdown }: { resumeMarkdown: string }) {
 
           return (
             <p
-              className={isBullet ? "pl-4 -indent-3" : "font-semibold"}
+              className={isBullet ? "pl-4 -indent-3" : "font-medium"}
               key={`${line}-${index}`}
             >
               {line}
@@ -75,9 +83,11 @@ function JakeResumePreview({ resumeMarkdown }: { resumeMarkdown: string }) {
 export function ResumeViewer({
   applicationId,
   bulletFeedback,
-  hasStructuredPdf,
+  resumeJson,
   resumeMarkdown
 }: ResumeViewerProps) {
+  const hasStructuredPdf = resumeJson !== null;
+
   return (
     <section className="grid gap-6">
       <div className="grid gap-6 lg:grid-cols-[minmax(0,0.85fr)_minmax(460px,1.15fr)]">
@@ -154,7 +164,9 @@ export function ResumeViewer({
                 Resume preview
               </h3>
               <p className="mt-1 text-sm text-muted-foreground">
-                Jake-style single-page PDF layout preview.
+                {hasStructuredPdf
+                  ? "Layout approximates the Jake-style PDF; download for the TeX output."
+                  : "Markdown-only preview until structured resume data is available."}
               </p>
             </div>
             {hasStructuredPdf ? (
@@ -173,7 +185,11 @@ export function ResumeViewer({
             )}
           </div>
           <div className="overflow-auto rounded-xl border border-border bg-secondary p-4">
-            <JakeResumePreview resumeMarkdown={resumeMarkdown} />
+            {resumeJson !== null ? (
+              <JakeResumeStructuredPreview resume={resumeJson} />
+            ) : (
+              <JakeResumeMarkdownPreview resumeMarkdown={resumeMarkdown} />
+            )}
           </div>
         </section>
       </div>

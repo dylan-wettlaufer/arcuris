@@ -1,6 +1,9 @@
 import { ResumeViewer } from "@/components/resume/resume-viewer";
 import { createClient } from "@/lib/supabase/server";
-import { bulletFeedbackSchema } from "@/lib/types";
+import {
+  bulletFeedbackSchema,
+  generatedResumeJsonSchema
+} from "@/lib/types";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
@@ -52,6 +55,11 @@ export default async function ResumePage({ params }: ResumePageProps) {
     .catch([])
     .parse(application.bullet_feedback);
 
+  const resumeJsonResult = generatedResumeJsonSchema.safeParse(
+    application.resume_json
+  );
+  const resumeJson = resumeJsonResult.success ? resumeJsonResult.data : null;
+
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-6 py-12">
       <div className="mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
@@ -87,7 +95,7 @@ export default async function ResumePage({ params }: ResumePageProps) {
       <ResumeViewer
         applicationId={application.id as string}
         bulletFeedback={bulletFeedback}
-        hasStructuredPdf={application.resume_json !== null}
+        resumeJson={resumeJson}
         resumeMarkdown={application.resume_markdown as string}
       />
 
