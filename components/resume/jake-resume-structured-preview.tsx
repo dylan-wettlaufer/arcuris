@@ -91,7 +91,7 @@ export function JakeResumeStructuredPreview({
       className={`aspect-[8.5/11] min-h-0 w-full overflow-auto bg-white p-[0.55in] text-neutral-950 shadow-xl ${resumePreviewFontClass}`}
     >
       <div className="text-center">
-        <p className="text-[21pt] font-medium leading-[1.15] tracking-tight text-neutral-950">
+        <p className="text-[16pt] font-medium leading-[1.15] tracking-tight text-neutral-950">
           {resume.contact.name}
         </p>
         {contactLine.length > 0 ? (
@@ -102,13 +102,6 @@ export function JakeResumeStructuredPreview({
       </div>
 
       <div className="mt-4 space-y-0">
-        <section>
-          <SectionHeading title="Summary" />
-          <p className="mt-2 text-justify text-[10pt] leading-[1.45] text-neutral-950">
-            {resume.summary}
-          </p>
-        </section>
-
         <section>
           <SectionHeading title="Education" />
           {resume.education.map((item, index) => {

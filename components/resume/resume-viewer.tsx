@@ -36,7 +36,7 @@ function JakeResumeMarkdownPreview({
       className={`aspect-[8.5/11] w-full overflow-hidden bg-white p-[0.55in] text-neutral-950 shadow-xl ${resumePreviewFontClass}`}
     >
       <div className="text-center">
-        <h2 className="text-[21pt] font-medium leading-[1.15] tracking-tight text-neutral-950">
+        <h2 className="text-[16pt] font-medium leading-[1.15] tracking-tight text-neutral-950">
           {name}
         </h2>
         {contactLine.length > 0 ? (

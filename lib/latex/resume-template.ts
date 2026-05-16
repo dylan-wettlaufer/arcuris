@@ -122,12 +122,11 @@ export function buildJakeResumeTex(resume: GeneratedResumeJson): string {
 \begin{document}
 
 \begin{center}
-  {\Huge \textbf{${text(resume.contact.name)}}}\\
+  {\LARGE \textbf{${text(resume.contact.name)}}}\\
   \vspace{2pt}
   \small ${text(contactItems)}
 \end{center}
 
-${section("Summary", text(resume.summary))}
 ${section("Education", education(resume))}
 ${section("Experience", experience(resume))}
 ${section("Projects", projects(resume))}
