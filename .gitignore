@@ -44,6 +44,24 @@ test-results/
 # typescript
 *.tsbuildinfo
 
+# python (ai-service, tooling)
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+ENV/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+*.egg-info/
+.eggs/
+
 # os files
 .DS_Store
 Thumbs.db
@@ -54,6 +72,3 @@ Thumbs.db
 !.vscode/extensions.json
 !.vscode/settings.json
 .cursor/plans/
-
-.env.example
-.env.local
