@@ -78,10 +78,11 @@ Return only JSON with this exact shape:
 Resume requirements:
 - Use only facts supported by the parsed resume and interview answers.
 - Emphasize the experiences, projects, skills, and impact most relevant to the job description.
-- Rewrite bullets to be specific, metric-aware, and action-oriented.
-- bulletRewrites must include the important rewritten experience/project bullets used in resumeMarkdown, up to 12 items.
-- Each rewrittenBullet must be a real bullet that appears in resumeMarkdown.
-- Each rewrittenBullet should materially differ from the originalBullet by using stronger ATS-aligned language when the source supports it.
+- **Do not JD-tailor every bullet.** For experience and project bullets that are **not** a strong fit for this job description, keep the wording **essentially the same** as the parsed resume (light grammar or tense fixes only—no keyword stuffing or JD reshaping).
+- **JD-tailor only bullets** where rephrasing clearly improves fit to the posting (skills, domain, responsibilities, or outcomes the JD cares about). Skip bullets that are off-topic for this role or already sufficient.
+- bulletRewrites must list **only** those JD-tailored bullets: one entry per bullet you materially rewrote for this job, **up to 12 items**, **at least 1 item** whenever at least one bullet benefits from JD alignment (otherwise include the single best candidate for alignment).
+- Each rewrittenBullet must be a real bullet that appears in resumeMarkdown and must match the corresponding originalBullet before tailoring.
+- Each rewrittenBullet should materially differ from the originalBullet by using stronger ATS-aligned language **when the source supports it** and the JD makes that angle relevant.
 - Keep the resume concise enough for one page.
 - resumeJson must contain the same resume content as resumeMarkdown, but structured for LaTeX rendering.
 - Keep section ordering suitable for a Jake's Resume style layout: contact, summary, education, experience, projects, skills.
@@ -105,6 +106,7 @@ def build_evaluate_resume_prompt(
 ) -> str:
     bullets_payload = [b.model_dump(by_alias=True) for b in draft_bullet_rewrites]
     return f"""Evaluate only these draft rewritten resume bullets against their original source bullets and the job description.
+The model chose these bullets as the subset that warranted JD-specific tailoring—not every bullet on the resume.
 
 Return only JSON with this exact shape:
 {{
@@ -146,10 +148,12 @@ def build_refine_resume_prompt(
     draft_resume_markdown: str,
     draft_bullet_rewrites: list[BulletRewrite],
     evaluation: ResumeEvaluation,
+    interview_answers: dict[str, str],
     job_description: str,
 ) -> str:
     bullets_payload = [b.model_dump(by_alias=True) for b in draft_bullet_rewrites]
-    return f"""Apply every bullet-level improvement to produce the final tailored resume.
+    return f"""Apply every bullet-level improvement from the evaluation to produce the final tailored resume.
+Use the interview answers for extra factual context when refining wording (do not invent facts).
 
 Return only JSON with this exact shape:
 {{
@@ -211,14 +215,14 @@ Return only JSON with this exact shape:
 
 Rules:
 - refinedScore must be an integer from 1 to 10 after improvements are applied.
-- bulletFeedback must include every item from draftBulletRewrites unless a bullet is removed for quality.
-- Each bulletFeedback item must compare one original source bullet to the final rewritten bullet.
-- draftBullet must exactly match the previous draft rewritten bullet for that item.
+- bulletFeedback must include **exactly one row per entry** in draftBulletRewrites (the JD-tailored subset from the draft). Do not add feedback rows for bullets that were never in that list.
+- Each bulletFeedback item must compare one original source bullet to the final rewritten bullet for bullets you refined; draftBullet must exactly match the previous draft rewritten bullet for that item.
 - rewrittenBullet must be the final bullet text and must appear in resumeMarkdown.
+- **Leave all other resume bullets** (not in draftBulletRewrites) **unchanged** from the draft wording except tiny grammar fixes if needed—do not expand JD tailoring to bullets the draft already left generic.
 - When source facts allow it, rewrittenBullet should materially differ from draftBullet by applying the evaluation improvements.
 - The feedback must explain the refinement-stage change: JD language matched, stronger verb, clearer metric, tighter scope, or truthfulness correction.
-- Keep every rewritten bullet truthful to the original source bullets and interview context.
-- Improve ATS alignment by matching the job description's language where the source bullets support it.
+- Keep every rewritten bullet truthful to the original source bullets, parsed resume, and interview answers.
+- Improve ATS alignment by matching the job description's language where the source bullets and interview answers support it.
 - Do not add technologies, tools, metrics, credentials, or responsibilities that are not supported by the source material.
 - Preserve an ATS-safe structure: contact, summary, education, experience, projects, skills.
 - resumeJson must contain the same final resume content as resumeMarkdown, but structured for LaTeX rendering.
@@ -226,7 +230,7 @@ Rules:
 - Prefer strong relevant bullets over keyword stuffing.
 - Do not include commentary outside JSON.
 
-Draft bullet rewrites:
+Draft bullet rewrites (JD-tailored subset only):
 {_compact_json(bullets_payload)}
 
 Draft resume:
@@ -234,6 +238,9 @@ Draft resume:
 
 Evaluation and required improvements:
 {_compact_json(evaluation.model_dump(by_alias=True))}
+
+Interview answers:
+{_compact_json(interview_answers)}
 
 Job description:
 {job_description}"""

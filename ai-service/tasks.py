@@ -30,8 +30,8 @@ SYSTEM_EVALUATE = (
 )
 
 SYSTEM_REFINE = (
-    "You refine tailored resumes by applying every requested improvement. "
-    "Return only valid JSON."
+    "You refine JD-tailored resume bullets using evaluation feedback and interview "
+    "context; leave non-targeted bullets unchanged. Return only valid JSON."
 )
 
 
@@ -68,6 +68,7 @@ def process_resume(
             draft_resume_markdown=draft.resumeMarkdown,
             draft_bullet_rewrites=draft.bulletRewrites,
             evaluation=evaluation,
+            interview_answers=interview_answers,
             job_description=job_description,
         ),
         system_instruction=SYSTEM_REFINE,
