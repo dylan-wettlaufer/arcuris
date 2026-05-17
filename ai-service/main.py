@@ -16,7 +16,7 @@ def health():
 @app.post("/jobs/generate")
 def enqueue_generate(body: GenerateJobRequest):
     async_result = process_resume.delay(
-        body.parsed_resume.model_dump(mode="json"),
+        body.parsed_resume.model_dump(mode="json", by_alias=True),
         body.interview_answers,
         body.job_description,
     )

@@ -27,7 +27,52 @@ export const resumeProjectSchema = z.object({
   bullets: z.array(z.string())
 });
 
-export const parsedResumeSchema = z
+export const parsedResumeSkillGroupSchema = z
+  .object({
+    category: z.string().trim().min(1).max(80),
+    items: z.array(z.string()).max(48)
+  })
+  .strict();
+
+export type ParsedResumeSkillGroup = z.infer<typeof parsedResumeSkillGroupSchema>;
+
+/** Migrate legacy flat `skills: string[]` inventory rows to `skillGroups`. */
+function migrateParsedResumeJson(raw: unknown): unknown {
+  if (typeof raw !== "object" || raw === null || Array.isArray(raw)) {
+    return raw;
+  }
+
+  const original = raw as Record<string, unknown>;
+  const out = { ...original };
+  const legacySkills = original.skills;
+  const sg = original.skillGroups;
+
+  const skillGroupsLookValid =
+    Array.isArray(sg) &&
+    sg.length > 0 &&
+    sg.every(
+      (entry) =>
+        typeof entry === "object" &&
+        entry !== null &&
+        typeof (entry as Record<string, unknown>).category === "string" &&
+        String((entry as Record<string, unknown>).category).trim().length > 0
+    );
+
+  if (!skillGroupsLookValid) {
+    if (Array.isArray(legacySkills)) {
+      const flat = legacySkills.filter((item): item is string => typeof item === "string");
+      out.skillGroups =
+        flat.length > 0 ? [{ category: "Skills", items: flat }] : [];
+    } else {
+      out.skillGroups = [];
+    }
+  }
+
+  delete out.skills;
+  return out;
+}
+
+const parsedResumeCoreSchema = z
   .object({
     name: nullableTextSchema,
     email: nullableTextSchema,
@@ -38,9 +83,14 @@ export const parsedResumeSchema = z
     education: z.array(resumeEducationSchema),
     experience: z.array(resumeExperienceSchema),
     projects: z.array(resumeProjectSchema),
-    skills: z.array(z.string())
+    skillGroups: z.array(parsedResumeSkillGroupSchema).max(8)
   })
   .strict();
+
+export const parsedResumeSchema = z.preprocess(
+  migrateParsedResumeJson,
+  parsedResumeCoreSchema
+);
 
 export type ParsedResume = z.infer<typeof parsedResumeSchema>;
 
@@ -54,17 +104,50 @@ export const interviewQuestionSchema = z
   .object({
     id: questionIdSchema,
     question: z.string().min(1).max(500),
-    reason: z.string().min(1).max(500)
+    reason: z.string().min(1).max(500),
+    experienceIndex: z.number().int().min(0),
+    experienceLabel: z.string().trim().min(1).max(240)
   })
   .strict();
 
+export const maxInterviewQuestionBlocks = 12;
+export const interviewQuestionsPerExperience = 4;
+const maxInterviewQuestions =
+  maxInterviewQuestionBlocks * interviewQuestionsPerExperience;
+
 export const interviewQuestionsSchema = z
   .array(interviewQuestionSchema)
-  .length(6)
+  .min(interviewQuestionsPerExperience)
+  .max(maxInterviewQuestions)
   .refine(
-    (questions) => new Set(questions.map((question) => question.id)).size === 6,
+    (questions) =>
+      questions.length % interviewQuestionsPerExperience === 0,
+    `Interview questions must come in blocks of ${interviewQuestionsPerExperience} (one block per role).`
+  )
+  .refine(
+    (questions) =>
+      new Set(questions.map((question) => question.id)).size === questions.length,
     "Interview question IDs must be unique."
-  );
+  )
+  .refine((questions) => {
+    const blockCount = questions.length / interviewQuestionsPerExperience;
+    for (let block = 0; block < blockCount; block++) {
+      const slice = questions.slice(
+        block * interviewQuestionsPerExperience,
+        (block + 1) * interviewQuestionsPerExperience
+      );
+      const label = slice[0]?.experienceLabel;
+      const index = slice[0]?.experienceIndex;
+      if (label === undefined || index === undefined) {
+        return false;
+      }
+      if (!slice.every((q) => q.experienceLabel === label && q.experienceIndex === index)) {
+        return false;
+      }
+      if (index !== block) return false;
+    }
+    return true;
+  }, "Each role block must match its position index and share one label.");
 
 export const interviewAnswerSchema = z
   .object({
@@ -75,8 +158,8 @@ export const interviewAnswerSchema = z
 
 export const interviewAnswersSchema = z
   .array(interviewAnswerSchema)
-  .min(1)
-  .max(6)
+  .min(interviewQuestionsPerExperience)
+  .max(maxInterviewQuestions)
   .refine(
     (answers) => new Set(answers.map((answer) => answer.questionId)).size === answers.length,
     "Interview answers must use unique question IDs."

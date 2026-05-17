@@ -1,7 +1,4 @@
-import {
-  extractStructuredResume,
-  generateInterviewQuestions
-} from "@/lib/resume-parsing";
+import { buildInterviewQuestions, extractStructuredResume } from "@/lib/resume-parsing";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { type InterviewQuestion, type ParsedResume } from "@/lib/types";
@@ -187,7 +184,7 @@ export async function POST(request: Request): Promise<NextResponse<ParseResponse
 
   try {
     const parsedJson = await extractStructuredResume(resumeText);
-    const interviewQuestions = await generateInterviewQuestions(parsedJson);
+    const interviewQuestions = buildInterviewQuestions(parsedJson);
     const adminSupabase = createAdminClient();
     const { error: upsertError } = await adminSupabase.from("inventory").upsert(
       {

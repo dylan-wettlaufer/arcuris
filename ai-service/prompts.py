@@ -77,6 +77,7 @@ Return only JSON with this exact shape:
 
 Resume requirements:
 - Use only facts supported by the parsed resume and interview answers.
+- Interview answers are grouped per role (`exp_<n>_impact`, `exp_<n>_day_to_day`, `exp_<n>_technologies`, `exp_<n>_beyond_resume` matching `experience` index `n` left to right)—use those strings when deepening bullets or skills for each job.
 - Emphasize the experiences, projects, skills, and impact most relevant to the job description.
 - **Do not JD-tailor every bullet.** For experience and project bullets that are **not** a strong fit for this job description, keep the wording **essentially the same** as the parsed resume (light grammar or tense fixes only—no keyword stuffing or JD reshaping).
 - **JD-tailor only bullets** where rephrasing clearly improves fit to the posting (skills, domain, responsibilities, or outcomes the JD cares about). Skip bullets that are off-topic for this role or already sufficient.
@@ -89,10 +90,11 @@ Resume requirements:
 - **Date ranges:** In resumeJson (and markdown), every `dates` field that spans start and end must use a **separator**: an en dash with spaces, e.g. `September 2022 – April 2026`, `Jan 2022 – Present`, or `2020 – 2024`. Never output two month/year chunks back-to-back without ` – ` between them.
 - resumeJson must contain the same resume content as resumeMarkdown, but structured for LaTeX rendering.
 - Keep section ordering suitable for a Jake's Resume style layout: contact, summary, education, experience, projects, skills.
+- **Skills categories:** `resumeJson.skills` must mirror **parsed_resume.skillGroups**: same number of rows, same `category` strings in the same order. Edit **items** inside each category only (JD-align wording, dedupe, trim)—do **not** add category rows, remove rows, rename categories, merge two parsed categories, or split one parsed category into two. Every category must output **at least one** item (generated schema); if a parsed category lists zero items, populate it with truthful skills drawn from the rest of the parsed resume before responding. If `parsed_resume.skillGroups` is empty, use at most four sensible software-focused labels (for example Languages, Frameworks, Tools).
 - Use simple markdown headings and bullets. Do not include commentary outside JSON.
 
 Parsed resume:
-{_compact_json(parsed_resume.model_dump())}
+{_compact_json(parsed_resume.model_dump(mode="json", by_alias=True))}
 
 Interview answers:
 {_compact_json(interview_answers)}
@@ -165,6 +167,7 @@ def build_refine_resume_prompt(
     bullets_payload = [b.model_dump(by_alias=True) for b in draft_bullet_rewrites]
     return f"""Apply every bullet-level improvement from the evaluation to produce the final tailored resume.
 Use the interview answers for extra factual context when refining wording (do not invent facts).
+Keys follow `exp_<n>_impact`, `exp_<n>_day_to_day`, `exp_<n>_technologies`, and `exp_<n>_beyond_resume` for each parsed experience row (`n`=0 left to right).
 
 Return only JSON with this exact shape:
 {{
@@ -236,6 +239,7 @@ Rules:
 - Improve ATS alignment by matching the job description's language where the source bullets and interview answers support it.
 - Do not add technologies, tools, metrics, credentials, or responsibilities that are not supported by the source material.
 - Preserve an ATS-safe structure: contact, summary, education, experience, projects, skills.
+- **Skills categories:** Keep **resumeJson.skills** aligned with the draft resumeJson.skills: same rows with identical `category` strings and order; refine **items** inside those categories only.
 - resumeJson must contain the same final resume content as resumeMarkdown, but structured for LaTeX rendering.
 - CRITICAL: The entire resume MUST fit on one page.
 - Each bullet should stay about one printed line (prefer under ~160 characters; avoid long wraps).

@@ -46,11 +46,12 @@ export default async function OnboardingInterviewPage() {
           Onboarding
         </p>
         <h1 className="text-3xl font-medium tracking-tight text-foreground">
-          Add missing context.
+          Add depth for each role.
         </h1>
         <p className="mt-3 text-sm leading-6 text-muted-foreground">
-          Answer these follow-up questions so Arcuris can build a richer
-          inventory for future tailored resumes.
+          For every job listed on your resume you will answer the same four
+          prompts: impact, day-to-day work, tooling, and facts that didn&apos;t fit
+          on the page—so tailoring later stays accurate.
         </p>
         <InterviewForm
           initialAnswers={initialAnswers}

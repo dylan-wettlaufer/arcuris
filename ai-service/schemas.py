@@ -44,6 +44,26 @@ class ParsedResumeProject(BaseModel):
     bullets: list[str] = Field(default_factory=list)
 
 
+class ParsedResumeSkillGroup(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    category: str = Field(..., min_length=1, max_length=80)
+    items: list[str] = Field(default_factory=list, max_length=48)
+
+    @field_validator("items", mode="after")
+    @classmethod
+    def normalize_items(cls, items: list[str]) -> list[str]:
+        out: list[str] = []
+        for item in items:
+            if not isinstance(item, str):
+                continue
+            s = item.strip()
+            if len(s) < 1 or len(s) > 120:
+                continue
+            out.append(s)
+        return out
+
+
 class ParsedResume(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -56,7 +76,11 @@ class ParsedResume(BaseModel):
     education: list[ParsedResumeEducation] = Field(default_factory=list)
     experience: list[ParsedResumeExperience] = Field(default_factory=list)
     projects: list[ParsedResumeProject] = Field(default_factory=list)
-    skills: list[str] = Field(default_factory=list)
+    skill_groups: list[ParsedResumeSkillGroup] = Field(
+        default_factory=list,
+        alias="skillGroups",
+        max_length=8,
+    )
 
 
 # --- Job enqueue ----------------------------------------------------------------

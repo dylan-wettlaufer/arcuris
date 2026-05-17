@@ -6,11 +6,17 @@ import {
 } from "@/lib/types";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 
 type InterviewFormProps = {
   questions: InterviewQuestion[];
   initialAnswers: InterviewAnswersRecord;
+};
+
+type QuestionBlock = {
+  experienceLabel: string;
+  experienceIndex: number;
+  rows: InterviewQuestion[];
 };
 
 export function InterviewForm({
@@ -21,6 +27,33 @@ export function InterviewForm({
   const [answers, setAnswers] = useState<InterviewAnswersRecord>(initialAnswers);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+
+  const questionBlocks = useMemo((): QuestionBlock[] => {
+    const ordered = [...questions].sort((a, b) => {
+      const byIndex = a.experienceIndex - b.experienceIndex;
+      return byIndex !== 0
+        ? byIndex
+        : a.id.localeCompare(b.id);
+    });
+
+    const byIndex = new Map<number, QuestionBlock>();
+    for (const question of ordered) {
+      const existing = byIndex.get(question.experienceIndex);
+      if (!existing) {
+        byIndex.set(question.experienceIndex, {
+          experienceLabel: question.experienceLabel,
+          experienceIndex: question.experienceIndex,
+          rows: [question]
+        });
+      } else {
+        existing.rows.push(question);
+      }
+    }
+
+    return [...byIndex.entries()]
+      .sort((a, b) => a[0] - b[0])
+      .map(([, block]) => block);
+  }, [questions]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -70,7 +103,7 @@ export function InterviewForm({
   }
 
   return (
-    <form className="mt-8 grid gap-5" onSubmit={handleSubmit}>
+    <form className="mt-8 grid gap-10" onSubmit={handleSubmit}>
       {error !== null ? (
         <div
           className="flex gap-3 rounded-lg border border-destructive/50 bg-destructive/15 px-4 py-3 text-sm text-destructive-foreground"
@@ -81,47 +114,48 @@ export function InterviewForm({
         </div>
       ) : null}
 
-      {questions.map((question, index) => (
-        <section
-          className="rounded-xl border border-border bg-secondary p-5"
-          key={question.id}
-        >
-          <div className="mb-4 flex items-start gap-3">
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-card font-mono text-sm text-primary">
-              {index + 1}
-            </span>
-            <div>
-              <label
-                className="text-base font-medium text-foreground"
-                htmlFor={`answer-${question.id}`}
-              >
-                {question.question}
-              </label>
-              <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                {question.reason}
-              </p>
-            </div>
+      {questionBlocks.map((block) => (
+        <div className="grid gap-5" key={block.experienceIndex}>
+          <div className="border-b border-border pb-4">
+            <h2 className="text-xl font-medium text-foreground">{block.experienceLabel}</h2>
+            <p className="mt-1 text-sm leading-6 text-muted-foreground">
+              Same four prompts for each role so tailored bullets stay grounded.
+            </p>
           </div>
-          <textarea
-            className="min-h-32 w-full rounded-lg border border-input bg-card px-3 py-3 text-sm leading-6 text-foreground outline-none ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60"
-            disabled={pending}
-            id={`answer-${question.id}`}
-            onChange={(event) => {
-              setAnswers((currentAnswers) => ({
-                ...currentAnswers,
-                [question.id]: event.target.value
-              }));
-            }}
-            placeholder="Add context that should help tailor future resumes..."
-            value={answers[question.id] ?? ""}
-          />
-        </section>
+
+          {block.rows.map((question, slot) => (
+            <section className="rounded-xl border border-border bg-secondary p-5" key={question.id}>
+              <div className="mb-4 flex items-start gap-3">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-card font-mono text-sm text-primary">
+                  {slot + 1}
+                </span>
+                <div>
+                  <label className="text-base font-medium text-foreground" htmlFor={`answer-${question.id}`}>
+                    {question.question}
+                  </label>
+                  <p className="mt-1 text-sm leading-6 text-muted-foreground">{question.reason}</p>
+                </div>
+              </div>
+              <textarea
+                className="min-h-32 w-full rounded-lg border border-input bg-card px-3 py-3 text-sm leading-6 text-foreground outline-none ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60"
+                disabled={pending}
+                id={`answer-${question.id}`}
+                onChange={(event) => {
+                  setAnswers((currentAnswers) => ({
+                    ...currentAnswers,
+                    [question.id]: event.target.value
+                  }));
+                }}
+                placeholder="Facts and specifics work best—the model only uses what you confirm here..."
+                value={answers[question.id] ?? ""}
+              />
+            </section>
+          ))}
+        </div>
       ))}
 
       <div className="flex flex-col gap-3 border-t border-border pt-6 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm text-muted-foreground">
-          These answers will be saved with your inventory.
-        </p>
+        <p className="text-sm text-muted-foreground">These answers will be saved with your inventory.</p>
         <button
           className="inline-flex items-center justify-center rounded-lg bg-primary px-5 py-3 text-sm font-medium text-primary-foreground transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
           disabled={pending}
