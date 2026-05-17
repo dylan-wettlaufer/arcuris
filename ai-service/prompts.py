@@ -83,7 +83,9 @@ Resume requirements:
 - bulletRewrites must list **only** those JD-tailored bullets: one entry per bullet you materially rewrote for this job, **up to 12 items**, **at least 1 item** whenever at least one bullet benefits from JD alignment (otherwise include the single best candidate for alignment).
 - Each rewrittenBullet must be a real bullet that appears in resumeMarkdown and must match the corresponding originalBullet before tailoring.
 - Each rewrittenBullet should materially differ from the originalBullet by using stronger ATS-aligned language **when the source supports it** and the JD makes that angle relevant.
-- Keep the resume concise enough for one page.
+- CRITICAL: The entire resume MUST fit on one page.
+- Each bullet must be a maximum of one line (under 120 characters).
+- If the resume would exceed one page, cut bullets starting with the least relevant ones.
 - resumeJson must contain the same resume content as resumeMarkdown, but structured for LaTeX rendering.
 - Keep section ordering suitable for a Jake's Resume style layout: contact, summary, education, experience, projects, skills.
 - Use simple markdown headings and bullets. Do not include commentary outside JSON.
@@ -131,6 +133,7 @@ Scoring rules:
 - Reward ATS-aligned phrasing when it truthfully maps to the original bullets.
 - Do not penalize the resume for missing technologies, tools, credentials, or experiences that are absent from the original bullets.
 - Penalize invented claims, inflated scope, vague rewrites, weak action verbs, missing metrics that were present in the originals, and missed opportunities to mirror JD language.
+- Penalize bullets that exceed one line or 120 characters — brevity is critical for ATS and readability.
 - Improvements must be concrete bullet-level edits that can be applied in the next pass.
 
 Draft bullet rewrites to evaluate:
@@ -226,7 +229,9 @@ Rules:
 - Do not add technologies, tools, metrics, credentials, or responsibilities that are not supported by the source material.
 - Preserve an ATS-safe structure: contact, summary, education, experience, projects, skills.
 - resumeJson must contain the same final resume content as resumeMarkdown, but structured for LaTeX rendering.
-- Keep resumeJson concise enough for a one-page Jake's Resume style PDF.
+- CRITICAL: The entire resume MUST fit on one page.
+- Each bullet must be a maximum of one line (under 120 characters).
+- If the resume would exceed one page, cut bullets starting with the least relevant ones.
 - Prefer strong relevant bullets over keyword stuffing.
 - Do not include commentary outside JSON.
 
