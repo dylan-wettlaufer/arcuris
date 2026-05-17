@@ -81,17 +81,15 @@ function experience(resume: GeneratedResumeJson): string {
 function projects(resume: GeneratedResumeJson): string {
   return resume.projects
     .map((item) => {
-      const stack = item.techStack.length > 0 ? item.techStack.join(", ") : null;
-      const subtitle = joinPresent(
-        [
-          stack !== null ? escapeLatex(stack) : null,
-          escapeLatexDateFragment(normalizeResumeDateRange(item.dates)) || null
-        ],
-        " | "
-      );
-      return `\\entry{${text(item.name)}}{}{${subtitle}}{}\n${bullets(
-        item.bullets
-      )}`;
+      const stackJoined =
+        item.techStack.length > 0 ? item.techStack.join(", ") : "";
+      const techSuffix =
+        stackJoined.length > 0
+          ? ` | \\textit{{\\small ${escapeLatex(stackJoined)}}}`
+          : "";
+      return `\\projectentry{${text(item.name)}}{${techSuffix}}{${datesCell(
+        item.dates
+      )}}\n${bullets(item.bullets)}`;
     })
     .join("\n");
 }
@@ -138,6 +136,12 @@ export function buildJakeResumeTex(resume: GeneratedResumeJson): string {
   \begin{tabular*}{\textwidth}{l@{\extracolsep{\fill}}r}
     \textbf{#1} & #2 \\
     \textit{\small #3} & \textit{\small #4} \\
+  \end{tabular*}
+}
+
+\newcommand{\projectentry}[3]{
+  \begin{tabular*}{\textwidth}{l@{\extracolsep{\fill}}r}
+    \textbf{#1}#2 & #3 \\
   \end{tabular*}
 }
 

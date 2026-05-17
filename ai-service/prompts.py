@@ -84,7 +84,7 @@ Resume requirements:
 - Each rewrittenBullet must be a real bullet that appears in resumeMarkdown and must match the corresponding originalBullet before tailoring.
 - Each rewrittenBullet should materially differ from the originalBullet by using stronger ATS-aligned language **when the source supports it** and the JD makes that angle relevant.
 - CRITICAL: The entire resume MUST fit on one page.
-- Each bullet must be a maximum of one line (under 120 characters).
+- Each bullet should stay about one printed line (prefer under ~160 characters; avoid long wraps).
 - If the resume would exceed one page, cut bullets starting with the least relevant ones.
 - **Date ranges:** In resumeJson (and markdown), every `dates` field that spans start and end must use a **separator**: an en dash with spaces, e.g. `September 2022 – April 2026`, `Jan 2022 – Present`, or `2020 – 2024`. Never output two month/year chunks back-to-back without ` – ` between them.
 - resumeJson must contain the same resume content as resumeMarkdown, but structured for LaTeX rendering.
@@ -140,7 +140,7 @@ Scoring rules:
 - Reward ATS-aligned phrasing when it truthfully maps to the original bullets.
 - Do not penalize the resume for missing technologies, tools, credentials, or experiences that are absent from the original bullets.
 - Penalize invented claims, inflated scope, vague rewrites, weak action verbs, missing metrics that were present in the originals, and missed opportunities to mirror JD language.
-- Penalize bullets that exceed one line or 120 characters — brevity is critical for ATS and readability.
+- Penalize bullets that sprawl past roughly one line or ~160 characters — brevity still matters for ATS and readability.
 - Improvements must be concrete bullet-level edits that can be applied in the next pass.
 - **Again:** improvements.length must equal **5** in the JSON output — double-check before responding.
 
@@ -238,7 +238,7 @@ Rules:
 - Preserve an ATS-safe structure: contact, summary, education, experience, projects, skills.
 - resumeJson must contain the same final resume content as resumeMarkdown, but structured for LaTeX rendering.
 - CRITICAL: The entire resume MUST fit on one page.
-- Each bullet must be a maximum of one line (under 120 characters).
+- Each bullet should stay about one printed line (prefer under ~160 characters; avoid long wraps).
 - If the resume would exceed one page, cut bullets starting with the least relevant ones.
 - **Date ranges:** In resumeJson (and markdown), every `dates` field that spans start and end must use a **separator**: an en dash with spaces, e.g. `September 2022 – April 2026`, `Jan 2022 – Present`, or `2020 – 2024`. Never output two month/year chunks back-to-back without ` – ` between them.
 - Prefer strong relevant bullets over keyword stuffing.

@@ -151,18 +151,27 @@ export function JakeResumeStructuredPreview({
             {resume.projects.map((item, index) => {
               const stack =
                 item.techStack.length > 0 ? item.techStack.join(", ") : null;
-              const subtitle = joinPresent(
-                [stack, normalizeResumeDateRange(item.dates)],
-                " | "
-              );
+              const datesNorm = normalizeResumeDateRange(item.dates);
               return (
                 <div key={`proj-${index}-${item.name}`}>
-                  <EntryRows
-                    primaryLeft={item.name}
-                    primaryRight=""
-                    secondaryLeft={subtitle}
-                    secondaryRight=""
-                  />
+                  <div className="mt-2 text-[10pt] leading-[1.4] text-neutral-950 first:mt-1.5">
+                    <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-0.5">
+                      <span className="min-w-0 font-medium">
+                        {item.name}
+                        {stack !== null ? (
+                          <span className="text-[9pt] font-normal italic leading-[1.35] text-neutral-800">
+                            {" | "}
+                            {stack}
+                          </span>
+                        ) : null}
+                      </span>
+                      {datesNorm.length > 0 ? (
+                        <span className="shrink-0 tabular-nums text-neutral-900">
+                          {datesNorm}
+                        </span>
+                      ) : null}
+                    </div>
+                  </div>
                   <BulletList items={item.bullets} />
                 </div>
               );
