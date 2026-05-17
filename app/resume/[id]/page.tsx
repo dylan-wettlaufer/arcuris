@@ -78,13 +78,13 @@ export default async function ResumePage({ params }: ResumePageProps) {
         </div>
         <div className="flex flex-col gap-3 sm:flex-row">
           <Link
-            className="inline-flex items-center justify-center rounded-lg border border-border bg-secondary px-4 py-2 text-sm font-medium text-foreground transition hover:bg-muted"
+            className="inline-flex w-full items-center justify-center rounded-lg border border-border bg-secondary px-4 py-2 text-sm font-medium text-foreground transition hover:bg-muted"
             href="/dashboard"
           >
             Dashboard
           </Link>
           <Link
-            className="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:opacity-90"
+            className="inline-flex w-full items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:opacity-90"
             href="/generate"
           >
             New resume

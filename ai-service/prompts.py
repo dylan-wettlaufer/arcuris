@@ -86,6 +86,7 @@ Resume requirements:
 - CRITICAL: The entire resume MUST fit on one page.
 - Each bullet must be a maximum of one line (under 120 characters).
 - If the resume would exceed one page, cut bullets starting with the least relevant ones.
+- **Date ranges:** In resumeJson (and markdown), every `dates` field that spans start and end must use a **separator**: an en dash with spaces, e.g. `September 2022 – April 2026`, `Jan 2022 – Present`, or `2020 – 2024`. Never output two month/year chunks back-to-back without ` – ` between them.
 - resumeJson must contain the same resume content as resumeMarkdown, but structured for LaTeX rendering.
 - Keep section ordering suitable for a Jake's Resume style layout: contact, summary, education, experience, projects, skills.
 - Use simple markdown headings and bullets. Do not include commentary outside JSON.
@@ -126,6 +127,12 @@ Return only JSON with this exact shape:
   ]
 }}
 
+CRITICAL — improvements array:
+- improvements must be a JSON array of **exactly five** strings: **not 4, not 6, not any other count — always 5.**
+- Each string is one standalone improvement line (no nested lists or numbered sub-items inside one string).
+- If you have more than five ideas, keep only the five highest-impact edits and drop the rest. If you have fewer than five, split one broad issue into two concrete bullet-level fixes until you have five (still truthful to the source bullets).
+- Do **not** append an extra sixth improvement; downstream validation rejects any length other than 5.
+
 Scoring rules:
 - Every score must be an integer from 1 to 10.
 - draftScore is the overall quality of the rewritten bullets, not the whole resume.
@@ -135,6 +142,7 @@ Scoring rules:
 - Penalize invented claims, inflated scope, vague rewrites, weak action verbs, missing metrics that were present in the originals, and missed opportunities to mirror JD language.
 - Penalize bullets that exceed one line or 120 characters — brevity is critical for ATS and readability.
 - Improvements must be concrete bullet-level edits that can be applied in the next pass.
+- **Again:** improvements.length must equal **5** in the JSON output — double-check before responding.
 
 Draft bullet rewrites to evaluate:
 {_compact_json(bullets_payload)}
@@ -232,6 +240,7 @@ Rules:
 - CRITICAL: The entire resume MUST fit on one page.
 - Each bullet must be a maximum of one line (under 120 characters).
 - If the resume would exceed one page, cut bullets starting with the least relevant ones.
+- **Date ranges:** In resumeJson (and markdown), every `dates` field that spans start and end must use a **separator**: an en dash with spaces, e.g. `September 2022 – April 2026`, `Jan 2022 – Present`, or `2020 – 2024`. Never output two month/year chunks back-to-back without ` – ` between them.
 - Prefer strong relevant bullets over keyword stuffing.
 - Do not include commentary outside JSON.
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircle, Loader2, Sparkles } from "lucide-react";
+import { AlertCircle, Check, Loader2, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
@@ -9,6 +9,8 @@ const minJobDescriptionLength = 200;
 
 const pollIntervalMs = 2500;
 const maxPollAttempts = 120;
+const almostDoneAfterMs = 30_000;
+const doneFlashMs = 450;
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => {
@@ -43,6 +45,8 @@ export function JobDescriptionForm() {
     trimmedJobDescription.length >= minJobDescriptionLength &&
     trimmedJobDescription.length <= maxJobDescriptionLength;
 
+  const showProgressHint = pending && statusLabel !== "Done! ✓";
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
@@ -54,6 +58,7 @@ export function JobDescriptionForm() {
     }
 
     setPending(true);
+    setStatusLabel("Queued...");
 
     try {
       const response = await fetch("/api/generate", {
@@ -85,13 +90,14 @@ export function JobDescriptionForm() {
       }
 
       const taskId = responseBody.taskId;
+      const generationStartedAt = Date.now();
 
       for (let attempt = 0; attempt < maxPollAttempts; attempt += 1) {
+        const elapsed = Date.now() - generationStartedAt;
         setStatusLabel(
-          attempt === 0
-            ? "Queued — running three-pass review…"
-            : "Still generating — you can keep this tab open…"
+          elapsed >= almostDoneAfterMs ? "Almost done..." : "Generating..."
         );
+
         if (attempt > 0) {
           await sleep(pollIntervalMs);
         }
@@ -128,6 +134,8 @@ export function JobDescriptionForm() {
           throw new Error(statusBody.error);
         }
 
+        setStatusLabel("Done! ✓");
+        await sleep(doneFlashMs);
         router.push(`/resume/${statusBody.applicationId}`);
         router.refresh();
         return;
@@ -146,6 +154,8 @@ export function JobDescriptionForm() {
       setStatusLabel(null);
     }
   }
+
+  const isDoneFlash = statusLabel === "Done! ✓";
 
   return (
     <form
@@ -193,27 +203,45 @@ export function JobDescriptionForm() {
         </div>
       </section>
 
-      <div className="flex flex-col gap-3 border-t border-border pt-6 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 border-t border-border pt-6 sm:flex-row sm:items-start sm:justify-between">
         <p className="text-sm text-muted-foreground">
           This will generate and log an application record.
         </p>
-        <button
-          className="inline-flex items-center justify-center rounded-lg bg-primary px-5 py-3 text-sm font-medium text-primary-foreground transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
-          disabled={!canContinue || pending}
-          type="submit"
-        >
-          {pending ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
-              {statusLabel ?? "Running three-pass review"}
-            </>
-          ) : (
-            <>
-              <Sparkles className="mr-2 h-4 w-4" aria-hidden="true" />
-              Generate resume
-            </>
-          )}
-        </button>
+        <div className="flex flex-col items-stretch gap-2 sm:items-end">
+          <button
+            className="inline-flex items-center justify-center rounded-lg bg-primary px-5 py-3 text-sm font-medium text-primary-foreground transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+            disabled={!canContinue || pending}
+            type="submit"
+          >
+            {pending ? (
+              <>
+                {isDoneFlash ? (
+                  <Check
+                    className="mr-2 h-4 w-4 shrink-0"
+                    aria-hidden="true"
+                    strokeWidth={2.5}
+                  />
+                ) : (
+                  <Loader2
+                    className="mr-2 h-4 w-4 shrink-0 animate-spin"
+                    aria-hidden="true"
+                  />
+                )}
+                {statusLabel ?? "Generating..."}
+              </>
+            ) : (
+              <>
+                <Sparkles className="mr-2 h-4 w-4 shrink-0" aria-hidden="true" />
+                Generate Resume
+              </>
+            )}
+          </button>
+          {showProgressHint ? (
+            <p className="text-center text-xs leading-relaxed text-muted-foreground sm:text-right">
+              This usually takes 30-60 seconds
+            </p>
+          ) : null}
+        </div>
       </div>
     </form>
   );

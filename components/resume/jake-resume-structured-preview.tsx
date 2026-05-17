@@ -1,4 +1,5 @@
 import { resumePreviewFontClass } from "@/components/resume/resume-preview-font";
+import { normalizeResumeDateRange } from "@/lib/resume-date-range";
 import { type GeneratedResumeJson } from "@/lib/types";
 
 function joinPresent(
@@ -113,7 +114,7 @@ export function JakeResumeStructuredPreview({
               <div key={`edu-${index}-${item.institution}`}>
                 <EntryRows
                   primaryLeft={item.institution}
-                  primaryRight={item.dates ?? ""}
+                  primaryRight={normalizeResumeDateRange(item.dates)}
                   secondaryLeft={degreeLine}
                   secondaryRight=""
                 />
@@ -134,7 +135,7 @@ export function JakeResumeStructuredPreview({
               <div key={`exp-${index}-${item.company}`}>
                 <EntryRows
                   primaryLeft={item.company}
-                  primaryRight={item.dates ?? ""}
+                  primaryRight={normalizeResumeDateRange(item.dates)}
                   secondaryLeft={subtitle}
                   secondaryRight=""
                 />
@@ -150,7 +151,10 @@ export function JakeResumeStructuredPreview({
             {resume.projects.map((item, index) => {
               const stack =
                 item.techStack.length > 0 ? item.techStack.join(", ") : null;
-              const subtitle = joinPresent([stack, item.dates], " | ");
+              const subtitle = joinPresent(
+                [stack, normalizeResumeDateRange(item.dates)],
+                " | "
+              );
               return (
                 <div key={`proj-${index}-${item.name}`}>
                   <EntryRows

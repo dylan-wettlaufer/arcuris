@@ -26,7 +26,9 @@ SYSTEM_DRAFT = (
 
 SYSTEM_EVALUATE = (
     "You evaluate only rewritten resume bullets against original source bullets "
-    "and job descriptions with strict integer scoring. Return only valid JSON."
+    "and job descriptions with strict integer scoring. The improvements field "
+    "must always be a JSON array of exactly five strings — never four, six, or "
+    "any other length. Return only valid JSON."
 )
 
 SYSTEM_REFINE = (

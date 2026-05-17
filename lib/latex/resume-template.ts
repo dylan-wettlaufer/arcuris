@@ -1,3 +1,4 @@
+import { normalizeResumeDateRange } from "@/lib/resume-date-range";
 import { type GeneratedResumeJson } from "@/lib/types";
 
 function escapeLatex(value: string): string {
@@ -16,6 +17,21 @@ function escapeLatex(value: string): string {
 
 function text(value: string | null | undefined): string {
   return escapeLatex(value ?? "");
+}
+
+/**
+ * Plain Unicode en/em dashes sometimes disappear or substitute poorly in the
+ * pdflatex/Tectonic pipeline; TeX `--` / `---` ligatures always yield a
+ * visible dash in PDF output.
+ */
+function escapeLatexDateFragment(value: string): string {
+  return escapeLatex(
+    value.replaceAll("–", "--").replaceAll("—", "---")
+  );
+}
+
+function datesCell(value: string | null | undefined): string {
+  return escapeLatexDateFragment(normalizeResumeDateRange(value));
 }
 
 function joinPresent(values: Array<string | null | undefined>, separator: string) {
@@ -44,7 +60,7 @@ function education(resume: GeneratedResumeJson): string {
   return resume.education
     .map((item) => {
       const degreeLine = joinPresent([item.degree, item.location], " | ");
-      return `\\entry{${text(item.institution)}}{${text(item.dates)}}{${text(
+      return `\\entry{${text(item.institution)}}{${datesCell(item.dates)}}{${text(
         degreeLine
       )}}{}\n${bullets(item.details)}`;
     })
@@ -55,7 +71,7 @@ function experience(resume: GeneratedResumeJson): string {
   return resume.experience
     .map((item) => {
       const subtitle = joinPresent([item.role, item.location], " | ");
-      return `\\entry{${text(item.company)}}{${text(item.dates)}}{${text(
+      return `\\entry{${text(item.company)}}{${datesCell(item.dates)}}{${text(
         subtitle
       )}}{}\n${bullets(item.bullets)}`;
     })
@@ -66,8 +82,14 @@ function projects(resume: GeneratedResumeJson): string {
   return resume.projects
     .map((item) => {
       const stack = item.techStack.length > 0 ? item.techStack.join(", ") : null;
-      const subtitle = joinPresent([stack, item.dates], " | ");
-      return `\\entry{${text(item.name)}}{}{${text(subtitle)}}{}\n${bullets(
+      const subtitle = joinPresent(
+        [
+          stack !== null ? escapeLatex(stack) : null,
+          escapeLatexDateFragment(normalizeResumeDateRange(item.dates)) || null
+        ],
+        " | "
+      );
+      return `\\entry{${text(item.name)}}{}{${subtitle}}{}\n${bullets(
         item.bullets
       )}`;
     })
