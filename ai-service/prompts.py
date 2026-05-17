@@ -77,7 +77,7 @@ Return only JSON with this exact shape:
 
 Resume requirements:
 - Use only facts supported by the parsed resume and interview answers.
-- Interview answers are grouped per role (`exp_<n>_impact`, `exp_<n>_day_to_day`, `exp_<n>_technologies`, `exp_<n>_beyond_resume` matching `experience` index `n` left to right)—use those strings when deepening bullets or skills for each job.
+- Interview answers use `exp_<n>_impact`, `exp_<n>_day_to_day`, `exp_<n>_technologies`, and `exp_<n>_beyond_resume` for entries in `parsed_resume.experience` at index `n` that were flagged technical (non-technical lines like club leadership are skipped). If every line was non-technical, keys are `general_context_impact`, `general_context_day_to_day`, `general_context_technologies`, and `general_context_beyond_resume`—use those as one free-form technical story.
 - Emphasize the experiences, projects, skills, and impact most relevant to the job description.
 - **Do not JD-tailor every bullet.** For experience and project bullets that are **not** a strong fit for this job description, keep the wording **essentially the same** as the parsed resume (light grammar or tense fixes only—no keyword stuffing or JD reshaping).
 - **JD-tailor only bullets** where rephrasing clearly improves fit to the posting (skills, domain, responsibilities, or outcomes the JD cares about). Skip bullets that are off-topic for this role or already sufficient.
@@ -167,7 +167,7 @@ def build_refine_resume_prompt(
     bullets_payload = [b.model_dump(by_alias=True) for b in draft_bullet_rewrites]
     return f"""Apply every bullet-level improvement from the evaluation to produce the final tailored resume.
 Use the interview answers for extra factual context when refining wording (do not invent facts).
-Keys follow `exp_<n>_impact`, `exp_<n>_day_to_day`, `exp_<n>_technologies`, and `exp_<n>_beyond_resume` for each parsed experience row (`n`=0 left to right).
+Keys are `exp_<n>_*` for technical `experience` rows at index `n`, or `general_context_*` when no row was technical—map answers to the matching job bullets when possible.
 
 Return only JSON with this exact shape:
 {{

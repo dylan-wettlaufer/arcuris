@@ -119,7 +119,7 @@ export function InterviewForm({
           <div className="border-b border-border pb-4">
             <h2 className="text-xl font-medium text-foreground">{block.experienceLabel}</h2>
             <p className="mt-1 text-sm leading-6 text-muted-foreground">
-              Same four prompts for each role so tailored bullets stay grounded.
+              Same four prompts per technical role so tailored bullets stay grounded.
             </p>
           </div>
 

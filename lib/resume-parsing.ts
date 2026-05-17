@@ -16,8 +16,8 @@ function parseJsonFromText(text: string): unknown {
 
 /** Human-readable heading for grouped interview questions */
 function formatExperienceLabel(
-  experience: ParsedResume["experience"][0] | undefined,
-  index: number
+  experience: ParsedResume["experience"][number] | undefined,
+  resumeIndex: number
 ): string {
   if (experience === undefined) return "Professional experience";
 
@@ -32,7 +32,7 @@ function formatExperienceLabel(
 
   if (company.length > 0) return company;
 
-  return `Experience ${index + 1}`;
+  return `Experience ${resumeIndex + 1}`;
 }
 
 const experienceInterviewTemplates: ReadonlyArray<{
@@ -63,7 +63,24 @@ const experienceInterviewTemplates: ReadonlyArray<{
   }
 ];
 
-/** Fixed follow-ups per parsed role for richer generate-phase context */
+function experienceNeedsInterviewContext(entry: ParsedResume["experience"][number]): boolean {
+  return entry.isTechnicalRole !== false;
+}
+
+/**
+ * Resume lists positions but extractor marked none as technical — still collect one technical story via stable keys (`general_context_*`).
+ */
+function buildGeneralContextQuestions(): InterviewQuestion[] {
+  return experienceInterviewTemplates.map((tpl) => ({
+    id: `general_context_${tpl.suffix}`,
+    question: `${tpl.question} Point to the job, internship, or project where your technical work matters most.`,
+    reason: `No technical roles were flagged (e.g. leadership-only lines); ${tpl.reason.toLowerCase()}`,
+    experienceIndex: 0,
+    experienceLabel: "Technical experience"
+  }));
+}
+
+/** Fixed follow-ups for technical roles only (stable `exp_<resumeIndex>_*` keys aligned to parsed `experience`). */
 export function buildInterviewQuestions(parsedResume: ParsedResume): InterviewQuestion[] {
   if (experienceInterviewTemplates.length !== interviewQuestionsPerExperience) {
     throw new Error(
@@ -71,33 +88,40 @@ export function buildInterviewQuestions(parsedResume: ParsedResume): InterviewQu
     );
   }
 
-  const capped =
-    parsedResume.experience.length > 0
-      ? parsedResume.experience.slice(0, maxInterviewQuestionBlocks)
-      : [];
-
-  const blockCount =
-    capped.length > 0 ? capped.length : 1;
-
   const questions: InterviewQuestion[] = [];
 
-  for (let block = 0; block < blockCount; block++) {
-    const experience = capped[block];
-    const label = formatExperienceLabel(experience, block);
-
+  if (parsedResume.experience.length === 0) {
     for (const tpl of experienceInterviewTemplates) {
       questions.push({
-        id: `exp_${block}_${tpl.suffix}`,
-        question:
-          capped.length === 0
-            ? `${tpl.question} (If you have no formal roles yet, answer for internships, freelance, or academics.)`
-            : tpl.question,
-        reason:
-          capped.length === 0
-            ? `${tpl.reason} Use your strongest relevant role or project activity.`
-            : tpl.reason,
-        experienceIndex: block,
-        experienceLabel: capped.length === 0 ? "Professional experience" : label
+        id: `exp_0_${tpl.suffix}`,
+        question: `${tpl.question} (If you have no formal roles yet, answer for internships, freelance, or academics.)`,
+        reason: `${tpl.reason} Use your strongest relevant role or project activity.`,
+        experienceIndex: 0,
+        experienceLabel: "Professional experience"
+      });
+    }
+    return questions;
+  }
+
+  const capped = parsedResume.experience.slice(0, maxInterviewQuestionBlocks);
+
+  const technicalRows = capped
+    .map((entry, resumeIndex) => ({ entry, resumeIndex }))
+    .filter(({ entry }) => experienceNeedsInterviewContext(entry));
+
+  if (technicalRows.length === 0) {
+    return buildGeneralContextQuestions();
+  }
+
+  for (const { entry, resumeIndex } of technicalRows) {
+    const label = formatExperienceLabel(entry, resumeIndex);
+    for (const tpl of experienceInterviewTemplates) {
+      questions.push({
+        id: `exp_${resumeIndex}_${tpl.suffix}`,
+        question: tpl.question,
+        reason: tpl.reason,
+        experienceIndex: resumeIndex,
+        experienceLabel: label
       });
     }
   }
@@ -134,7 +158,8 @@ export async function extractStructuredResume(
     "location": string | null,
     "startDate": string | null,
     "endDate": string | null,
-    "bullets": string[]
+    "bullets": string[],
+    "isTechnicalRole": boolean
   }],
   "projects": [{
     "name": string | null,
@@ -147,6 +172,11 @@ export async function extractStructuredResume(
     "items": ["skill tokens listed under that heading"]
   }]
 }
+
+For every experience object, set isTechnicalRole:
+- true when the role is primarily hands-on technical work for job search (software engineering, data/ML engineering, devops/SRE, security engineering, QA automation, technical internship with coding or systems work, research engineering, etc.).
+- false when the role is primarily non-technical for tailoring purposes (student club or org leadership with no engineering scope, volunteer coordination, retail/hospitality, purely administrative work, competitive debate or finance club without a technical deliverable, etc.).
+- When unsure, prefer true if the bullets mention building, shipping, debugging, stack, dashboards, labs, deployments, datasets, circuits, CAD for hardware, etc.
 
 Skills extraction rules:
 - Mirror how the resume groups skills: one skillGroups object per visible subsection or column heading (preserve category wording).

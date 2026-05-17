@@ -25,7 +25,7 @@ class ParsedResumeEducation(BaseModel):
 
 
 class ParsedResumeExperience(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
 
     company: str | None = None
     role: str | None = None
@@ -33,6 +33,7 @@ class ParsedResumeExperience(BaseModel):
     startDate: str | None = None
     endDate: str | None = None
     bullets: list[str] = Field(default_factory=list)
+    is_technical_role: bool = Field(default=True, alias="isTechnicalRole")
 
 
 class ParsedResumeProject(BaseModel):

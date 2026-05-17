@@ -17,7 +17,9 @@ export const resumeExperienceSchema = z.object({
   location: nullableTextSchema,
   startDate: nullableTextSchema,
   endDate: nullableTextSchema,
-  bullets: z.array(z.string())
+  bullets: z.array(z.string()),
+  /** When false, onboarding skips per-role prompts (e.g. club leadership). Default true for legacy rows. */
+  isTechnicalRole: z.boolean().default(true)
 });
 
 export const resumeProjectSchema = z.object({
@@ -144,10 +146,9 @@ export const interviewQuestionsSchema = z
       if (!slice.every((q) => q.experienceLabel === label && q.experienceIndex === index)) {
         return false;
       }
-      if (index !== block) return false;
     }
     return true;
-  }, "Each role block must match its position index and share one label.");
+  }, "Each role block must share one resume row index and label.");
 
 export const interviewAnswerSchema = z
   .object({

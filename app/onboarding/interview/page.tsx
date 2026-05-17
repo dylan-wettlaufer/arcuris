@@ -49,9 +49,9 @@ export default async function OnboardingInterviewPage() {
           Add depth for each role.
         </h1>
         <p className="mt-3 text-sm leading-6 text-muted-foreground">
-          For every job listed on your resume you will answer the same four
-          prompts: impact, day-to-day work, tooling, and facts that didn&apos;t fit
-          on the page—so tailoring later stays accurate.
+          For each job the parser flags as technical, you will answer the same four
+          prompts. Non-technical lines (for example club leadership only) are skipped
+          so tailoring focuses on engineering context.
         </p>
         <InterviewForm
           initialAnswers={initialAnswers}
