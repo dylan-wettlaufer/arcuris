@@ -62,7 +62,7 @@ export default async function ResumePage({ params }: ResumePageProps) {
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-6 py-12">
-      <div className="mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+      <div className="mb-8">
         <div>
           <p className="mb-3 inline-flex rounded-full border border-border bg-card px-3 py-1 text-sm text-muted-foreground">
             Application {formatDate(application.created_at as string)}
@@ -76,19 +76,21 @@ export default async function ResumePage({ params }: ResumePageProps) {
             {application.refined_score as number}/10.
           </p>
         </div>
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <Link
-            className="inline-flex w-full items-center justify-center rounded-lg border border-border bg-secondary px-4 py-2 text-sm font-medium text-foreground transition hover:bg-muted"
-            href="/dashboard"
-          >
-            Dashboard
-          </Link>
-          <Link
-            className="inline-flex w-full items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:opacity-90"
-            href="/generate"
-          >
-            New resume
-          </Link>
+        <div className="mt-5 grid gap-6 lg:grid-cols-[minmax(0,0.85fr)_minmax(460px,1.15fr)]">
+          <div className="flex flex-row flex-nowrap items-center justify-end gap-3 lg:col-start-2">
+            <Link
+              className="inline-flex shrink-0 items-center justify-center rounded-lg border border-border bg-secondary px-5 py-2 text-sm font-medium text-foreground transition hover:bg-muted"
+              href="/dashboard"
+            >
+              Dashboard
+            </Link>
+            <Link
+              className="inline-flex shrink-0 items-center justify-center rounded-lg bg-primary px-5 py-2 text-sm font-medium text-primary-foreground transition hover:opacity-90"
+              href="/generate"
+            >
+              New resume
+            </Link>
+          </div>
         </div>
       </div>
 

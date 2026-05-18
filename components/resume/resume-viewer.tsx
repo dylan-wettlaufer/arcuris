@@ -1,4 +1,4 @@
-import { Download } from "lucide-react";
+import { DownloadPdfButton } from "@/components/resume/download-pdf-button";
 import { JakeResumeStructuredPreview } from "@/components/resume/jake-resume-structured-preview";
 import { resumePreviewFontClass } from "@/components/resume/resume-preview-font";
 import { type BulletFeedback, type GeneratedResumeJson } from "@/lib/types";
@@ -170,14 +170,7 @@ export function ResumeViewer({
               </p>
             </div>
             {hasStructuredPdf ? (
-              <a
-                className="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:opacity-90"
-                download
-                href={`/api/applications/${applicationId}/pdf`}
-              >
-                <Download className="mr-2 h-4 w-4" aria-hidden="true" />
-                Download PDF
-              </a>
+              <DownloadPdfButton applicationId={applicationId} />
             ) : (
               <span className="inline-flex items-center justify-center rounded-lg border border-border bg-secondary px-4 py-2 text-sm font-medium text-muted-foreground">
                 PDF unavailable
