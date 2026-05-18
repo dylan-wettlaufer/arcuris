@@ -78,7 +78,7 @@ Return only JSON with this exact shape:
 Resume requirements:
 - Use only facts supported by the parsed resume and interview answers.
 - Interview answers use `exp_<n>_impact`, `exp_<n>_day_to_day`, `exp_<n>_technologies`, and `exp_<n>_beyond_resume` for entries in `parsed_resume.experience` at index `n` that were flagged technical (non-technical lines like club leadership are skipped). If every line was non-technical, keys are `general_context_impact`, `general_context_day_to_day`, `general_context_technologies`, and `general_context_beyond_resume`—use those as one free-form technical story.
-- Emphasize the experiences, projects, skills, and impact most relevant to the job description.
+- Prioritize JD alignment in the bullets you choose to rewrite, not by removing experience or project rows.
 - **Do not JD-tailor every bullet.** For experience and project bullets that are **not** a strong fit for this job description, keep the wording **essentially the same** as the parsed resume (light grammar or tense fixes only—no keyword stuffing or JD reshaping).
 - **JD-tailor only bullets** where rephrasing clearly improves fit to the posting (skills, domain, responsibilities, or outcomes the JD cares about). Skip bullets that are off-topic for this role or already sufficient.
 - bulletRewrites must list **only** those JD-tailored bullets: one entry per bullet you materially rewrote for this job, **up to 12 items**, **at least 1 item** whenever at least one bullet benefits from JD alignment (otherwise include the single best candidate for alignment).
@@ -86,11 +86,12 @@ Resume requirements:
 - Each rewrittenBullet should materially differ from the originalBullet by using stronger ATS-aligned language **when the source supports it** and the JD makes that angle relevant.
 - CRITICAL: The entire resume MUST fit on one page.
 - Each bullet should stay about one printed line (prefer under ~160 characters; avoid long wraps).
-- If the resume would exceed one page, cut bullets starting with the least relevant ones.
+- If the resume would exceed one page, shorten bullet wording and/or remove **individual** bullets starting with the least JD-relevant; **never** remove an entire experience or project row.
 - **Date ranges:** In resumeJson (and markdown), every `dates` field that spans start and end must use a **separator**: an en dash with spaces, e.g. `September 2022 – April 2026`, `Jan 2022 – Present`, or `2020 – 2024`. Never output two month/year chunks back-to-back without ` – ` between them.
 - resumeJson must contain the same resume content as resumeMarkdown, but structured for LaTeX rendering.
 - Keep section ordering suitable for a Jake's Resume style layout: contact, summary, education, experience, projects, skills.
 - **Skills categories:** `resumeJson.skills` must mirror **parsed_resume.skillGroups**: same number of rows, same `category` strings in the same order. Edit **items** inside each category only (JD-align wording, dedupe, trim)—do **not** add category rows, remove rows, rename categories, merge two parsed categories, or split one parsed category into two. Every category must output **at least one** item (generated schema); if a parsed category lists zero items, populate it with truthful skills drawn from the rest of the parsed resume before responding. If `parsed_resume.skillGroups` is empty, use at most four sensible software-focused labels (for example Languages, Frameworks, Tools).
+- **Experience and projects (structure):** `resumeJson.experience` must include **every** entry in `parsed_resume.experience` in the **same order**; keep `company`, `role`, `location`, and `dates` aligned with each parsed row. `resumeJson.projects` must include **every** entry in `parsed_resume.projects` in the **same order**; keep `name`, `techStack`, and `dates` aligned with each parsed row. Do **not** omit, merge, or add experience/project rows for JD fit. Selective JD tailoring belongs in `bulletRewrites` only.
 - Use simple markdown headings and bullets. Do not include commentary outside JSON.
 
 Parsed resume:
@@ -243,8 +244,9 @@ Rules:
 - resumeJson must contain the same final resume content as resumeMarkdown, but structured for LaTeX rendering.
 - CRITICAL: The entire resume MUST fit on one page.
 - Each bullet should stay about one printed line (prefer under ~160 characters; avoid long wraps).
-- If the resume would exceed one page, cut bullets starting with the least relevant ones.
+- If the resume would exceed one page, shorten bullet wording and/or remove **individual** bullets starting with the least JD-relevant; **never** remove an entire experience or project row.
 - **Date ranges:** In resumeJson (and markdown), every `dates` field that spans start and end must use a **separator**: an en dash with spaces, e.g. `September 2022 – April 2026`, `Jan 2022 – Present`, or `2020 – 2024`. Never output two month/year chunks back-to-back without ` – ` between them.
+- **Experience and projects (structure):** Keep **every** `parsed_resume.experience` and `parsed_resume.projects` row in the same order with the same company/role/name and dates as inventory. Refine only bullets in `bulletFeedback`; other bullets stay as in the draft unless trimmed for one page (individual bullets only, never whole rows).
 - Prefer strong relevant bullets over keyword stuffing.
 - Do not include commentary outside JSON.
 
