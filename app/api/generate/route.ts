@@ -4,12 +4,14 @@ import {
 } from "@/lib/ai-service-client";
 import { createClient } from "@/lib/supabase/server";
 import {
+  archiveNotesSchema,
   generatedResumeSchema,
   interviewAnswersRecordSchema,
   jobDescriptionRequestSchema,
   parsedResumeSchema,
   type GeneratedResume
 } from "@/lib/types";
+import { mapArchiveNoteRows } from "@/lib/archive";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -138,12 +140,25 @@ export async function POST(
 
   let parsedResume: ReturnType<typeof parsedResumeSchema.parse>;
   let interviewAnswers: Record<string, string>;
+  let archiveNotes: ReturnType<typeof archiveNotesSchema.parse>;
 
   try {
     parsedResume = parsedResumeSchema.parse(inventory.parsed_json);
     interviewAnswers = interviewAnswersRecordSchema.parse(
       inventory.interview_answers
     );
+
+    const { data: noteRows, error: notesError } = await supabase
+      .from("archive_notes")
+      .select("id, item_type, item_index, content, created_at, updated_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+
+    if (notesError !== null) {
+      throw new Error(notesError.message);
+    }
+
+    archiveNotes = archiveNotesSchema.parse(mapArchiveNoteRows(noteRows ?? []));
   } catch (parseError: unknown) {
     return NextResponse.json(
       { error: parseUnknownError(parseError) },
@@ -157,6 +172,7 @@ export async function POST(
     taskId = await enqueueResumeGenerationJob({
       parsed_resume: parsedResume,
       interview_answers: interviewAnswers,
+      archive_notes: archiveNotes,
       job_description: jobDescription
     });
   } catch (enqueueError: unknown) {

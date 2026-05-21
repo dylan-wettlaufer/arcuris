@@ -40,6 +40,7 @@ const jobStatusSchema = z.union([
 export async function enqueueResumeGenerationJob(body: {
   parsed_resume: unknown;
   interview_answers: Record<string, string>;
+  archive_notes: unknown[];
   job_description: string;
 }): Promise<string> {
   const url = `${getAiServiceBaseUrl()}/jobs/generate`;
@@ -49,6 +50,7 @@ export async function enqueueResumeGenerationJob(body: {
     body: JSON.stringify({
       parsed_resume: body.parsed_resume,
       interview_answers: body.interview_answers,
+      archive_notes: body.archive_notes,
       job_description: body.job_description
     })
   });

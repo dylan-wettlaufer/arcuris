@@ -14,6 +14,7 @@ def build_draft_resume_prompt(
     *,
     parsed_resume: ParsedResume,
     interview_answers: dict[str, str],
+    archive_notes: list[dict[str, Any]],
     job_description: str,
 ) -> str:
     return f"""Generate a tailored resume for this new grad software engineering job application.
@@ -76,7 +77,8 @@ Return only JSON with this exact shape:
 }}
 
 Resume requirements:
-- Use only facts supported by the parsed resume and interview answers.
+- Use only facts supported by the parsed resume, interview answers, and archive notes.
+- Archive notes are user-added facts attached to `parsed_resume.experience[n]` or `parsed_resume.projects[n]`. Use them as factual source material when the related experience/project is relevant to the JD.
 - Interview answers use `exp_<n>_impact`, `exp_<n>_day_to_day`, `exp_<n>_technologies`, and `exp_<n>_beyond_resume` for entries in `parsed_resume.experience` at index `n` that were flagged technical (non-technical lines like club leadership are skipped). If every line was non-technical, keys are `general_context_impact`, `general_context_day_to_day`, `general_context_technologies`, and `general_context_beyond_resume`—use those as one free-form technical story.
 - Prioritize JD alignment in the bullets you choose to rewrite, not by removing experience or project rows.
 - **Do not JD-tailor every bullet.** For experience and project bullets that are **not** a strong fit for this job description, keep the wording **essentially the same** as the parsed resume (light grammar or tense fixes only—no keyword stuffing or JD reshaping).
@@ -99,6 +101,9 @@ Parsed resume:
 
 Interview answers:
 {_compact_json(interview_answers)}
+
+Archive notes:
+{_compact_json(archive_notes)}
 
 Job description:
 {job_description}"""
@@ -163,11 +168,13 @@ def build_refine_resume_prompt(
     draft_bullet_rewrites: list[BulletRewrite],
     evaluation: ResumeEvaluation,
     interview_answers: dict[str, str],
+    archive_notes: list[dict[str, Any]],
     job_description: str,
 ) -> str:
     bullets_payload = [b.model_dump(by_alias=True) for b in draft_bullet_rewrites]
     return f"""Apply every bullet-level improvement from the evaluation to produce the final tailored resume.
 Use the interview answers for extra factual context when refining wording (do not invent facts).
+Use archive notes as extra factual context for their matching experience/project rows.
 Keys are `exp_<n>_*` for technical `experience` rows at index `n`, or `general_context_*` when no row was technical—map answers to the matching job bullets when possible.
 
 Return only JSON with this exact shape:
@@ -261,6 +268,9 @@ Evaluation and required improvements:
 
 Interview answers:
 {_compact_json(interview_answers)}
+
+Archive notes:
+{_compact_json(archive_notes)}
 
 Job description:
 {job_description}"""

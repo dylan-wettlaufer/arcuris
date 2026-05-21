@@ -84,6 +84,21 @@ class ParsedResume(BaseModel):
     )
 
 
+class ArchiveNote(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True, populate_by_name=True)
+
+    item_type: str = Field(..., alias="itemType")
+    item_index: int = Field(..., alias="itemIndex", ge=0)
+    content: str = Field(..., min_length=1, max_length=4000)
+
+    @field_validator("item_type", mode="after")
+    @classmethod
+    def validate_item_type(cls, value: str) -> str:
+        if value not in {"experience", "project"}:
+            raise ValueError("Archive note itemType must be experience or project.")
+        return value
+
+
 # --- Job enqueue ----------------------------------------------------------------
 
 
@@ -92,6 +107,7 @@ class GenerateJobRequest(BaseModel):
 
     parsed_resume: ParsedResume
     interview_answers: dict[str, str]
+    archive_notes: list[ArchiveNote] = Field(default_factory=list, max_length=200)
     job_description: str = Field(..., min_length=200, max_length=60_000)
 
     @model_validator(mode="after")

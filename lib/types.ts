@@ -179,6 +179,40 @@ export type InterviewAnswer = z.infer<typeof interviewAnswerSchema>;
 export type InterviewAnswersRequest = z.infer<typeof interviewAnswersRequestSchema>;
 export type InterviewAnswersRecord = z.infer<typeof interviewAnswersRecordSchema>;
 
+export const archiveItemTypeSchema = z.enum(["experience", "project"]);
+
+export const archiveNoteRequestSchema = z
+  .object({
+    itemType: archiveItemTypeSchema,
+    itemIndex: z.number().int().min(0),
+    content: z.string().trim().min(1).max(4000)
+  })
+  .strict();
+
+export const archiveNoteUpdateSchema = z
+  .object({
+    content: z.string().trim().min(1).max(4000)
+  })
+  .strict();
+
+export const archiveNoteSchema = z
+  .object({
+    id: z.string().uuid(),
+    itemType: archiveItemTypeSchema,
+    itemIndex: z.number().int().min(0),
+    content: z.string().trim().min(1).max(4000),
+    createdAt: z.string().min(1),
+    updatedAt: z.string().min(1)
+  })
+  .strict();
+
+export const archiveNotesSchema = z.array(archiveNoteSchema);
+
+export type ArchiveItemType = z.infer<typeof archiveItemTypeSchema>;
+export type ArchiveNoteRequest = z.infer<typeof archiveNoteRequestSchema>;
+export type ArchiveNoteUpdate = z.infer<typeof archiveNoteUpdateSchema>;
+export type ArchiveNote = z.infer<typeof archiveNoteSchema>;
+
 export const jobDescriptionRequestSchema = z
   .object({
     jobDescription: z
