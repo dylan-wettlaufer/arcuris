@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Toaster } from "@/components/ui/sonner";
 import { DM_Sans, Fira_Code, Lora } from "next/font/google";
 import "./index.css";
 
@@ -34,6 +35,7 @@ export default function RootLayout({
         className={`${fontSans.variable} ${fontSerif.variable} ${fontMono.variable}`}
       >
         {children}
+        <Toaster position="bottom-right" richColors />
       </body>
     </html>
   );

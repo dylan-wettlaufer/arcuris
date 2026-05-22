@@ -1,4 +1,4 @@
-const defaultLatexServiceUrl = "http://localhost:8000";
+const defaultLatexServiceUrl = "http://127.0.0.1:8000";
 
 function getLatexServiceUrl(): string {
   return (

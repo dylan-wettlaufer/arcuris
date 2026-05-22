@@ -1,5 +1,9 @@
 import { normalizeResumeDateRange } from "@/lib/resume-date-range";
-import { type GeneratedResumeJson } from "@/lib/types";
+import {
+  defaultResumeSectionOrder,
+  type GeneratedResumeJson,
+  type ResumeSection
+} from "@/lib/types";
 
 function escapeLatex(value: string): string {
   return value
@@ -100,9 +104,25 @@ function skills(resume: GeneratedResumeJson): string {
       (group) =>
         `\\textbf{${text(group.category)}}: ${group.items
           .map((item) => text(item))
-          .join(", ")}\\\\`
+          .join(", ")}`
     )
-    .join("\n");
+    .join("\\\\\n");
+}
+
+function sectionBody(resume: GeneratedResumeJson, sectionName: ResumeSection): string {
+  if (sectionName === "education") {
+    return section("Education", education(resume));
+  }
+
+  if (sectionName === "experience") {
+    return section("Experience", experience(resume));
+  }
+
+  if (sectionName === "projects") {
+    return section("Projects", projects(resume));
+  }
+
+  return section("Skills", skills(resume));
 }
 
 export function buildJakeResumeTex(resume: GeneratedResumeJson): string {
@@ -153,10 +173,9 @@ export function buildJakeResumeTex(resume: GeneratedResumeJson): string {
   \small ${text(contactItems)}
 \end{center}
 
-${section("Education", education(resume))}
-${section("Experience", experience(resume))}
-${section("Projects", projects(resume))}
-${section("Skills", skills(resume))}
+${(resume.sectionOrder ?? [...defaultResumeSectionOrder])
+  .map((sectionName) => sectionBody(resume, sectionName))
+  .join("\n")}
 
 \end{document}
 `;

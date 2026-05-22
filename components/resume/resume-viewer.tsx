@@ -1,7 +1,18 @@
+"use client";
+
 import { DownloadPdfButton } from "@/components/resume/download-pdf-button";
 import { JakeResumeStructuredPreview } from "@/components/resume/jake-resume-structured-preview";
 import { resumePreviewFontClass } from "@/components/resume/resume-preview-font";
-import { type BulletFeedback, type GeneratedResumeJson } from "@/lib/types";
+import { ResumeJsonEditor } from "@/components/resume/resume-json-editor";
+import {
+  generatedResumeJsonSchema,
+  type BulletFeedback,
+  type GeneratedResumeJson
+} from "@/lib/types";
+import { cn } from "@/lib/utils";
+import { AlertCircle } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 
 type ResumeViewerProps = {
   applicationId: string;
@@ -86,7 +97,73 @@ export function ResumeViewer({
   resumeJson,
   resumeMarkdown
 }: ResumeViewerProps) {
-  const hasStructuredPdf = resumeJson !== null;
+  const [activeTab, setActiveTab] = useState<"preview" | "editor">("preview");
+  const [currentResumeJson, setCurrentResumeJson] =
+    useState<GeneratedResumeJson | null>(resumeJson);
+  const [saveStatus, setSaveStatus] = useState<
+    "idle" | "saving" | "saved" | "invalid" | "error"
+  >("idle");
+  const lastSavedJsonRef = useRef(
+    resumeJson === null ? "" : JSON.stringify(resumeJson)
+  );
+  const hasStructuredPdf = currentResumeJson !== null;
+
+  useEffect(() => {
+    if (currentResumeJson === null) {
+      return;
+    }
+
+    const serialized = JSON.stringify(currentResumeJson);
+    if (serialized === lastSavedJsonRef.current) {
+      return;
+    }
+
+    const parsed = generatedResumeJsonSchema.safeParse(currentResumeJson);
+    if (!parsed.success) {
+      setSaveStatus("invalid");
+      return;
+    }
+
+    setSaveStatus("saving");
+    const timeoutId = window.setTimeout(() => {
+      void (async () => {
+        try {
+          const response = await fetch(
+            `/api/applications/${encodeURIComponent(applicationId)}/resume-json`,
+            {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(parsed.data)
+            }
+          );
+          const body = (await response.json().catch(() => null)) as
+            | { resumeJson?: GeneratedResumeJson; error?: string }
+            | null;
+
+          if (!response.ok || body?.resumeJson === undefined) {
+            throw new Error(body?.error ?? "Could not save resume changes.");
+          }
+
+          const saved = generatedResumeJsonSchema.parse(body.resumeJson);
+          lastSavedJsonRef.current = JSON.stringify(saved);
+          setCurrentResumeJson(saved);
+          setSaveStatus("saved");
+          toast.success("Resume changes saved");
+        } catch (error: unknown) {
+          setSaveStatus("error");
+          toast.error(
+            error instanceof Error
+              ? error.message
+              : "Could not save resume changes."
+          );
+        }
+      })();
+    }, 900);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [applicationId, currentResumeJson]);
 
   return (
     <section className="grid gap-6">
@@ -161,11 +238,11 @@ export function ResumeViewer({
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <h3 className="text-lg font-medium text-foreground">
-                Resume preview
+                Resume
               </h3>
               <p className="mt-1 text-sm text-muted-foreground">
                 {hasStructuredPdf
-                  ? "Layout approximates the Jake-style PDF; download for the TeX output."
+                  ? "Preview the generated resume or edit its saved structured fields."
                   : "Markdown-only preview until structured resume data is available."}
               </p>
             </div>
@@ -177,13 +254,65 @@ export function ResumeViewer({
               </span>
             )}
           </div>
-          <div className="overflow-auto rounded-xl border border-border bg-secondary p-4">
-            {resumeJson !== null ? (
-              <JakeResumeStructuredPreview resume={resumeJson} />
-            ) : (
-              <JakeResumeMarkdownPreview resumeMarkdown={resumeMarkdown} />
-            )}
-          </div>
+
+          {currentResumeJson !== null ? (
+            <div className="grid gap-4">
+              <div className="flex flex-col gap-3 border-b border-border pb-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="inline-flex w-fit rounded-lg border border-border bg-secondary p-1">
+                  {(["preview", "editor"] as const).map((tab) => (
+                    <button
+                      className={cn(
+                        "rounded-md px-3 py-1.5 text-sm font-medium transition",
+                        activeTab === tab
+                          ? "bg-card text-foreground"
+                          : "text-muted-foreground hover:text-foreground"
+                      )}
+                      key={tab}
+                      onClick={() => {
+                        setActiveTab(tab);
+                      }}
+                      type="button"
+                    >
+                      {tab === "preview" ? "Preview" : "Editor"}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {saveStatus === "saving"
+                    ? "Saving..."
+                    : saveStatus === "saved"
+                      ? "Saved"
+                      : saveStatus === "invalid"
+                        ? "Finish required fields to autosave"
+                        : saveStatus === "error"
+                          ? "Save failed"
+                          : "Autosave on"}
+                </p>
+              </div>
+
+              {activeTab === "preview" ? (
+                <div className="overflow-auto rounded-xl border border-border bg-secondary p-4">
+                  <JakeResumeStructuredPreview resume={currentResumeJson} />
+                </div>
+              ) : (
+                <ResumeJsonEditor
+                  resume={currentResumeJson}
+                  onChange={setCurrentResumeJson}
+                />
+              )}
+            </div>
+          ) : (
+            <div className="overflow-auto rounded-xl border border-border bg-secondary p-4">
+              {resumeMarkdown.length > 0 ? (
+                <JakeResumeMarkdownPreview resumeMarkdown={resumeMarkdown} />
+              ) : (
+                <div className="flex gap-3 rounded-lg border border-destructive/50 bg-destructive/15 px-4 py-3 text-sm text-destructive-foreground">
+                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                  <span>This resume does not have editable structured data.</span>
+                </div>
+              )}
+            </div>
+          )}
         </section>
       </div>
     </section>

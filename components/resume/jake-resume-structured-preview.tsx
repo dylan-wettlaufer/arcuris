@@ -1,6 +1,10 @@
 import { resumePreviewFontClass } from "@/components/resume/resume-preview-font";
 import { normalizeResumeDateRange } from "@/lib/resume-date-range";
-import { type GeneratedResumeJson } from "@/lib/types";
+import {
+  defaultResumeSectionOrder,
+  type GeneratedResumeJson,
+  type ResumeSection
+} from "@/lib/types";
 
 function joinPresent(
   values: Array<string | null | undefined>,
@@ -87,23 +91,10 @@ export function JakeResumeStructuredPreview({
     " | "
   );
 
-  return (
-    <div
-      className={`aspect-[8.5/11] min-h-0 w-full overflow-auto bg-white p-[0.55in] text-neutral-950 shadow-xl ${resumePreviewFontClass}`}
-    >
-      <div className="text-center">
-        <p className="text-[16pt] font-medium leading-[1.15] tracking-tight text-neutral-950">
-          {resume.contact.name}
-        </p>
-        {contactLine.length > 0 ? (
-          <p className="mt-1 text-[9.5pt] leading-normal text-neutral-800">
-            {contactLine}
-          </p>
-        ) : null}
-      </div>
-
-      <div className="mt-4 space-y-0">
-        <section>
+  function renderSection(section: ResumeSection) {
+    if (section === "education") {
+      return (
+        <section key="education">
           <SectionHeading title="Education" />
           {resume.education.map((item, index) => {
             const degreeLine = joinPresent(
@@ -123,8 +114,12 @@ export function JakeResumeStructuredPreview({
             );
           })}
         </section>
+      );
+    }
 
-        <section>
+    if (section === "experience") {
+      return (
+        <section key="experience">
           <SectionHeading title="Experience" />
           {resume.experience.map((item, index) => {
             const subtitle = joinPresent(
@@ -144,42 +139,51 @@ export function JakeResumeStructuredPreview({
             );
           })}
         </section>
+      );
+    }
 
-        {resume.projects.length > 0 ? (
-          <section>
-            <SectionHeading title="Projects" />
-            {resume.projects.map((item, index) => {
-              const stack =
-                item.techStack.length > 0 ? item.techStack.join(", ") : null;
-              const datesNorm = normalizeResumeDateRange(item.dates);
-              return (
-                <div key={`proj-${index}-${item.name}`}>
-                  <div className="mt-2 text-[10pt] leading-[1.4] text-neutral-950 first:mt-1.5">
-                    <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-0.5">
-                      <span className="min-w-0 font-medium">
-                        {item.name}
-                        {stack !== null ? (
-                          <span className="text-[9pt] font-normal italic leading-[1.35] text-neutral-800">
-                            {" | "}
-                            {stack}
-                          </span>
-                        ) : null}
-                      </span>
-                      {datesNorm.length > 0 ? (
-                        <span className="shrink-0 tabular-nums text-neutral-900">
-                          {datesNorm}
+    if (section === "projects") {
+      if (resume.projects.length === 0) {
+        return null;
+      }
+
+      return (
+        <section key="projects">
+          <SectionHeading title="Projects" />
+          {resume.projects.map((item, index) => {
+            const stack =
+              item.techStack.length > 0 ? item.techStack.join(", ") : null;
+            const datesNorm = normalizeResumeDateRange(item.dates);
+            return (
+              <div key={`proj-${index}-${item.name}`}>
+                <div className="mt-2 text-[10pt] leading-[1.4] text-neutral-950 first:mt-1.5">
+                  <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-0.5">
+                    <span className="min-w-0 font-medium">
+                      {item.name}
+                      {stack !== null ? (
+                        <span className="text-[9pt] font-normal italic leading-[1.35] text-neutral-800">
+                          {" | "}
+                          {stack}
                         </span>
                       ) : null}
-                    </div>
+                    </span>
+                    {datesNorm.length > 0 ? (
+                      <span className="shrink-0 tabular-nums text-neutral-900">
+                        {datesNorm}
+                      </span>
+                    ) : null}
                   </div>
-                  <BulletList items={item.bullets} />
                 </div>
-              );
-            })}
-          </section>
-        ) : null}
+                <BulletList items={item.bullets} />
+              </div>
+            );
+          })}
+        </section>
+      );
+    }
 
-        <section>
+    return (
+      <section key="skills">
           <SectionHeading title="Skills" />
           <div className="mt-2 space-y-1.5 text-[10pt] leading-[1.45] text-neutral-950">
             {resume.skills.map((group, index) => (
@@ -191,6 +195,28 @@ export function JakeResumeStructuredPreview({
             ))}
           </div>
         </section>
+    );
+  }
+
+  const sectionOrder = resume.sectionOrder ?? [...defaultResumeSectionOrder];
+
+  return (
+    <div
+      className={`aspect-[8.5/11] min-h-0 w-full overflow-auto bg-white p-[0.55in] text-neutral-950 shadow-xl ${resumePreviewFontClass}`}
+    >
+      <div className="text-center">
+        <p className="text-[16pt] font-medium leading-[1.15] tracking-tight text-neutral-950">
+          {resume.contact.name}
+        </p>
+        {contactLine.length > 0 ? (
+          <p className="mt-1 text-[9.5pt] leading-normal text-neutral-800">
+            {contactLine}
+          </p>
+        ) : null}
+      </div>
+
+      <div className="mt-4 space-y-0">
+        {sectionOrder.map((section) => renderSection(section))}
       </div>
     </div>
   );

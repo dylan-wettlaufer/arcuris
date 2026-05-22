@@ -284,6 +284,33 @@ const generatedResumeSkillGroupSchema = z
   })
   .strict();
 
+export const resumeSectionSchema = z.enum([
+  "education",
+  "experience",
+  "projects",
+  "skills"
+]);
+
+export const defaultResumeSectionOrder = [
+  "education",
+  "experience",
+  "projects",
+  "skills"
+] as const;
+
+const resumeSectionOrderSchema = z
+  .array(resumeSectionSchema)
+  .default([...defaultResumeSectionOrder])
+  .transform((sections) => {
+    const present = new Set(sections);
+    return [
+      ...sections.filter(
+        (section, index) => sections.indexOf(section) === index
+      ),
+      ...defaultResumeSectionOrder.filter((section) => !present.has(section))
+    ];
+  });
+
 export const generatedResumeJsonSchema = z
   .object({
     contact: generatedResumeContactSchema,
@@ -291,7 +318,8 @@ export const generatedResumeJsonSchema = z
     education: z.array(generatedResumeEducationSchema).min(1).max(4),
     experience: z.array(generatedResumeExperienceSchema).min(1).max(5),
     projects: z.array(generatedResumeProjectSchema).max(5),
-    skills: z.array(generatedResumeSkillGroupSchema).min(1).max(8)
+    skills: z.array(generatedResumeSkillGroupSchema).min(1).max(8),
+    sectionOrder: resumeSectionOrderSchema
   })
   .strict();
 
@@ -356,6 +384,7 @@ export const generatedResumeSchema = z
 export type JobDescriptionRequest = z.infer<typeof jobDescriptionRequestSchema>;
 export type BulletRewrite = z.infer<typeof bulletRewriteSchema>;
 export type GeneratedResumeJson = z.infer<typeof generatedResumeJsonSchema>;
+export type ResumeSection = z.infer<typeof resumeSectionSchema>;
 export type GeneratedDraft = z.infer<typeof generatedDraftSchema>;
 export type ResumeEvaluation = z.infer<typeof resumeEvaluationSchema>;
 export type BulletFeedback = z.infer<typeof bulletFeedbackSchema>;
