@@ -213,6 +213,24 @@ export type ArchiveNoteRequest = z.infer<typeof archiveNoteRequestSchema>;
 export type ArchiveNoteUpdate = z.infer<typeof archiveNoteUpdateSchema>;
 export type ArchiveNote = z.infer<typeof archiveNoteSchema>;
 
+export const applicationStatuses = [
+  "Applied",
+  "Phone Screen",
+  "Interview",
+  "Offer",
+  "Rejected"
+] as const;
+
+export const applicationStatusSchema = z.enum(applicationStatuses);
+
+export const applicationStatusUpdateSchema = z
+  .object({
+    status: applicationStatusSchema
+  })
+  .strict();
+
+export type ApplicationStatus = z.infer<typeof applicationStatusSchema>;
+
 export const jobDescriptionRequestSchema = z
   .object({
     jobDescription: z

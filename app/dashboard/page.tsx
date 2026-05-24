@@ -1,15 +1,9 @@
 import { signOut } from "@/app/actions/auth";
+import { ApplicationsTable } from "@/components/dashboard/applications-table";
 import { createClient } from "@/lib/supabase/server";
+import { applicationStatusSchema } from "@/lib/types";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-
-function formatDate(value: string): string {
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric"
-  }).format(new Date(value));
-}
 
 export default async function DashboardPage() {
   const supabase = createClient();
@@ -93,41 +87,16 @@ export default async function DashboardPage() {
           </div>
 
           {applications !== null && applications.length > 0 ? (
-            <div className="overflow-hidden rounded-xl border border-border">
-              <div className="hidden grid-cols-[1.3fr_1fr_120px_100px] gap-4 border-b border-border bg-secondary px-4 py-3 text-xs font-medium uppercase text-muted-foreground md:grid">
-                <span>Role</span>
-                <span>Company</span>
-                <span>Status</span>
-                <span>Score</span>
-              </div>
-              <div className="divide-y divide-border">
-                {applications.map((application) => (
-                  <Link
-                    className="grid gap-2 px-4 py-4 transition hover:bg-secondary md:grid-cols-[1.3fr_1fr_120px_100px] md:items-center md:gap-4"
-                    href={`/resume/${application.id as string}`}
-                    key={application.id as string}
-                  >
-                    <div>
-                      <p className="font-medium text-foreground">
-                        {application.role_title as string}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {formatDate(application.created_at as string)}
-                      </p>
-                    </div>
-                    <p className="text-sm text-foreground">
-                      {application.company_name as string}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {application.status as string}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {application.refined_score as number}/10
-                    </p>
-                  </Link>
-                ))}
-              </div>
-            </div>
+            <ApplicationsTable
+              applications={applications.map((application) => ({
+                id: application.id as string,
+                companyName: application.company_name as string,
+                roleTitle: application.role_title as string,
+                status: applicationStatusSchema.parse(application.status),
+                createdAt: application.created_at as string,
+                refinedScore: application.refined_score as number
+              }))}
+            />
           ) : (
             <div className="rounded-xl border border-dashed border-border bg-secondary p-6">
               <p className="text-sm font-medium text-foreground">
