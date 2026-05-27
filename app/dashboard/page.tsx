@@ -67,7 +67,7 @@ export default async function DashboardPage() {
             className="rounded-lg border border-border bg-secondary px-3 py-2 text-foreground transition hover:bg-muted"
             href="/onboarding/upload"
           >
-            Upload resume
+            Upload new resume
           </Link>
         </nav>
 

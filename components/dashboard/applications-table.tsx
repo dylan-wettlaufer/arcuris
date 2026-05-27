@@ -127,7 +127,7 @@ export function ApplicationsTable({ applications }: ApplicationsTableProps) {
                   {application.companyName}
                 </span>
                 <select
-                  className="h-9 rounded-lg border border-input bg-card px-2 text-sm text-foreground outline-none ring-offset-background transition focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60"
+                  className="h-9 rounded-lg border border-border bg-secondary px-2 text-sm text-foreground outline-none ring-offset-background transition focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60"
                   disabled={isSaving}
                   onChange={(event) => {
                     const nextStatus = event.target.value;
